@@ -30,7 +30,8 @@ public:
       : size(size_),
         persistent{(flags & VMA_ALLOCATION_CREATE_MAPPED_BIT) != 0} {
 
-    const vk::BufferCreateInfo buffer_create_info({}, size, buffer_usage);
+    const auto buffer_create_info =
+        vk::BufferCreateInfo().setSize(size).setUsage(buffer_usage);
 
     const VmaAllocationCreateInfo memory_info{
         .flags = flags,
@@ -89,9 +90,9 @@ public:
   VmaAllocation get_allocation() const { return allocation; };
   const std::byte *get_data() const { return mapped_data; };
   vk::DeviceMemory get_memory() const { return memory; };
-  uint64_t get_device_address() const {
-    return device_ptr->getBufferAddressKHR(get_handle());
-  };
+  // uint64_t get_device_address() const {
+  //   return device_ptr->getBufferAddressKHR(get_handle());
+  // };
   vk::DeviceSize get_size() const { return size; };
 
   void update(const std::vector<std::byte> &data, size_t offset = 0) {
@@ -122,10 +123,12 @@ private:
   bool mapped = true;
 
   // TODO: add these as handle
+  vk::Buffer buffer;
+  // std::shared_ptr<vk::Device> device_ptr;
+
+public:
   inline vk::Buffer &get_handle() { return buffer; };
   inline const vk::Buffer &get_handle() const { return buffer; }
-  vk::Buffer buffer;
-  std::shared_ptr<vk::Device> device_ptr;
 };
 
 } // namespace core

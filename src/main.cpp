@@ -1,14 +1,10 @@
-#include "core/compute_shader.hpp"
 #include <iostream>
-#include <memory>
+#include <random>
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 
-// #include "core/compute_shader.hpp"
 #include "core/engine.hpp"
-
-#include "core/buffer.hpp"
 
 namespace core {
 VmaAllocator g_allocator;
@@ -20,11 +16,22 @@ VmaAllocator g_allocator;
 }
 
 int main(int argc, char **argv) {
-  core::ComputeEngine engine{};
+  constexpr auto min_coord = 0.0f;
+  constexpr auto max_coord = 1024.0f;
+  constexpr auto range = max_coord - min_coord;
+  std::default_random_engine gen(114514);
+  std::uniform_real_distribution<float> dis(min_coord, range);
 
-  auto buf_ptr = std::make_shared<core::Buffer>(1024 * sizeof(glm::vec4));
-  core::ComputeShader shader{engine.get_device_ptr(), "None"};
+  std::vector<InputT> h_data(InputSize());
+  std::ranges::generate(
+      h_data, [&]() { return glm::vec4(dis(gen), dis(gen), dis(gen), 0.0f); });
+
+  core::ComputeEngine engine{};
+  engine.run(h_data);
+
+  // auto buf_ptr = std::make_shared<core::Buffer>(1024 * sizeof(glm::vec4));
+
 
   std::cout << "Done!" << std::endl;
-  return 0;
+  return EXIT_SUCCESS;
 }

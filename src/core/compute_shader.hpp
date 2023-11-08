@@ -83,6 +83,9 @@ private:
 
   // Handle
   std::shared_ptr<vk::Device> device_ptr;
+
+public:
+  vk::ShaderModule &get_handle() { return compute_shader; };
 };
 
 inline std::ostream &operator<<(std::ostream &os,
