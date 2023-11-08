@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <vulkan/vulkan.hpp>
 
 namespace core {
@@ -17,7 +18,7 @@ public:
   virtual void destroy() = 0;
 
 private:
-  VkDevice *device;
+  std::shared_ptr<VkDevice> device;
   HandleT handle;
 };
 }; // namespace core

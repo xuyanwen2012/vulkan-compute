@@ -1,7 +1,6 @@
 #pragma once
 
 #include <glm/fwd.hpp>
-#include <memory>
 #include <vulkan/vulkan.hpp>
 
 #include "base_engine.hpp"
@@ -35,7 +34,7 @@ private:
   vk::DescriptorPool descriptor_pool;
   vk::DescriptorSet descriptor_set;
 
-  std::vector<std::unique_ptr<Buffer>> usm_buffers;
+  std::vector<Buffer> usm_buffers;
 };
 
 } // namespace core

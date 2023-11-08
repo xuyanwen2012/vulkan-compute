@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <utility>
 #include <vk_mem_alloc.h>
 #include <vulkan/vulkan.hpp>
 
@@ -61,7 +62,14 @@ public:
 
   Buffer(const Buffer &) = delete;
 
-  Buffer(Buffer &&other);
+  Buffer(Buffer &&other)
+      : allocation(std::exchange(other.allocation, {})),
+        memory(std::exchange(other.memory, {})),
+        size(std::exchange(other.size, {})),
+        mapped_data(std::exchange(other.mapped_data, {})),
+        mapped(std::exchange(other.mapped, {})) {
+    std::cout << "move constructor" << std::endl;
+  }
 
   ~Buffer() {
     if (get_handle() && (allocation != VK_NULL_HANDLE)) {
@@ -103,7 +111,7 @@ public:
 private:
   VmaAllocation allocation = VK_NULL_HANDLE;
   vk::DeviceMemory memory = nullptr;
-  const vk::DeviceSize size = 0;
+  vk::DeviceSize size = 0;
   std::byte *mapped_data = nullptr;
 
   const bool persistent = true;

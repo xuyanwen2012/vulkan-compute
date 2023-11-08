@@ -24,6 +24,14 @@ int main(int argc, char **argv) {
 
   auto buf_ptr = std::make_shared<core::Buffer>(1024 * sizeof(glm::vec4));
 
+  // std::vector<core::Buffer> bufs{{1024 * sizeof(glm::vec4)},
+                                //  {1024 * sizeof(glm::vec4)}};
+
+  std::vector<core::Buffer> bufs;
+  bufs.reserve(2);
+  bufs.emplace_back(1024 * sizeof(glm::vec4));
+  bufs.emplace_back(1024 * sizeof(glm::vec4));
+
 
   core::ComputeShader shader{engine.get_disp(), "None"};
 
