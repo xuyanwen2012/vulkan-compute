@@ -3,8 +3,8 @@
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 
-#include "core/base_engine.hpp"
-#include "core/compute_shader.hpp"
+// #include "core/compute_shader.hpp"
+#include "core/engine.hpp"
 
 #include "core/buffer.hpp"
 
@@ -18,22 +18,13 @@ VmaAllocator g_allocator;
 }
 
 int main(int argc, char **argv) {
-  core::BaseEngine engine{};
+  core::ComputeEngine engine{};
 
   // auto buf = core::Buffer(1024 * sizeof(glm::vec4));
 
   auto buf_ptr = std::make_shared<core::Buffer>(1024 * sizeof(glm::vec4));
 
-  // std::vector<core::Buffer> bufs{{1024 * sizeof(glm::vec4)},
-                                //  {1024 * sizeof(glm::vec4)}};
-
-  std::vector<core::Buffer> bufs;
-  bufs.reserve(2);
-  bufs.emplace_back(1024 * sizeof(glm::vec4));
-  bufs.emplace_back(1024 * sizeof(glm::vec4));
-
-
-  core::ComputeShader shader{engine.get_disp(), "None"};
-
+  // core::ComputeShader shader{engine.get_disp(), "None"};
+  std::cout << "Done!" << std::endl;
   return 0;
 }
