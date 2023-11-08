@@ -3,6 +3,7 @@
 #include <glm/fwd.hpp>
 #include <memory>
 #include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan_core.h>
 
 #include "base_engine.hpp"
 #include "buffer.hpp"
@@ -29,12 +30,34 @@ public:
   ComputeEngine() : BaseEngine() {
     vkhDevice = device.device;
 
+    // Create instance, device, etc. Done in BaseEngine
+
     create_command_pool();
   }
 
   ~ComputeEngine() {
     vkhDevice.freeCommandBuffers(command_pool, command_buffer);
     vkhDevice.destroyCommandPool(command_pool);
+  }
+
+  // void submit_commands(std::vector<CommandBuffer>& commandVecs){
+  // }
+
+  void submit(const vk::CommandBuffer &commandBuffer) {
+    vk::SubmitInfo submitInfo;
+    submitInfo.setCommandBuffers(commandBuffer);
+
+    if (const auto result = disp.queueSubmit(
+            queue, 1, reinterpret_cast<VkSubmitInfo *>(&submitInfo),
+            VK_NULL_HANDLE);
+        result != VK_SUCCESS) {
+      throw std::runtime_error("Cannot submit queue");
+    }
+
+    auto waitResult =
+        vkhDevice.waitForFences(m_immediateFence, false, UINT64_MAX);
+    assert(waitResult == vk::Result::eSuccess);
+    vkhDevice.resetFences(m_immediateFence);
   }
 
   void run(const std::vector<InputT> &input_data) {}
@@ -67,10 +90,13 @@ private:
   // std::vector<vk::CommandPool> m_threadCommandPool;
 
   vk::CommandBuffer command_buffer; // immediate command buffer
+
+  vk::Fence m_immediateFence;
   // These are for each compute shader (pipeline)
 
   vk::Pipeline pipeline;
   vk::PipelineLayout pipeline_layout;
+  
   vk::DescriptorSetLayout descriptor_set_layout;
   vk::DescriptorPool descriptor_pool;
   vk::DescriptorSet descriptor_set;
