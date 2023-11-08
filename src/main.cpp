@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <iostream>
 #include <random>
 
@@ -29,8 +30,20 @@ int main(int argc, char **argv) {
   core::ComputeEngine engine{};
   engine.run(h_data);
 
-  // auto buf_ptr = std::make_shared<core::Buffer>(1024 * sizeof(glm::vec4));
+  auto output_data =
+      reinterpret_cast<const OutputT *>(engine.usm_buffers[1]->get_data());
 
+  std::cout << "Output:" << std::endl;
+  for (size_t i = 0; i < 10; ++i) {
+    // clang-format off
+    std::cout << "[" << i << "] "
+              << std::fixed << std::setprecision(3) << "("
+              << std::setw(8) << h_data[i].x << ", "
+              << std::setw(8) << h_data[i].y << ", "
+              << std::setw(8) << h_data[i].z << ")"
+              << "\t" << std::setw(9) << output_data[i] << std::endl;
+    // clang-format on
+  }
 
   std::cout << "Done!" << std::endl;
   return EXIT_SUCCESS;

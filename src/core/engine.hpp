@@ -338,6 +338,7 @@ private:
   vk::DescriptorSet descriptor_set;
 
   // Warning: use pointer, other wise the buffer's content might be gone
+public:
   std::vector<std::shared_ptr<Buffer>> usm_buffers;
 
   // std::shared_ptr<DescriptorAllocator> m_descriptorAllocator;

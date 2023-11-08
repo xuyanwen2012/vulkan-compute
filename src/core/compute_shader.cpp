@@ -26,12 +26,12 @@ void ComputeShader::CollectSpirvMetaData(
     }
   };
 
-  std::cout << "Storage Buffer: \n";
+  // std::cout << "Storage Buffer: \n";
   for (const auto &res : resources.storage_buffers) {
     collectResource(res, vk::DescriptorType::eStorageBuffer);
   }
 
-  std::cout << "Push Constant: \n";
+  // std::cout << "Push Constant: \n";
   for (const auto &res : resources.push_constant_buffers) {
     std::string_view resourceName = res.name;
     const spirv_cross::SPIRType &type = compiler.get_type(res.type_id);
@@ -39,7 +39,7 @@ void ComputeShader::CollectSpirvMetaData(
     if (!m_pushConstantMeta.has_value()) {
       PushConstantMetaData meta{size, 0, shaderFlags};
 
-      std::cout << meta << std::endl;
+      // std::cout << meta << std::endl;
 
       m_pushConstantMeta = std::optional<PushConstantMetaData>(meta);
     } else {
