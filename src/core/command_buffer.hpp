@@ -31,16 +31,12 @@ class HPPDescriptorSetLayout;
 
 class HPPCommandBuffer {
 public:
-  HPPCommandBuffer(HPPCommandPool &command_pool, vk::CommandBufferLevel level)
-      : command_pool{command_pool}, level{level} {
-    // vk::CommandBufferAllocateInfo allocate_info(command_pool.get_handle(),
-    //                                             level, 1);
-  }
+  HPPCommandBuffer(HPPCommandPool &command_pool) : command_pool(command_pool) {}
 
   HPPCommandBuffer(HPPCommandBuffer &&other);
   ~HPPCommandBuffer() {
     if (handle) {
-    //   device_ptr->freeCommandBuffers(command_pool.get_handle(), handle);
+      // device_ptr->freeCommandBuffers(command_pool.get_handle(), handle);
     }
   };
 
@@ -99,7 +95,6 @@ public:
   vk::Result reset() { return vk::Result::eSuccess; }
 
 private:
-  const vk::CommandBufferLevel level = {};
   HPPCommandPool &command_pool;
 
   //   vkb::rendering::HPPPipelineState pipeline_state          = {};

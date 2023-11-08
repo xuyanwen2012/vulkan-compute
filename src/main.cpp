@@ -1,4 +1,6 @@
+#include "core/compute_shader.hpp"
 #include <iostream>
+#include <memory>
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
@@ -20,11 +22,13 @@ VmaAllocator g_allocator;
 int main(int argc, char **argv) {
   core::ComputeEngine engine{};
 
-  // auto buf = core::Buffer(1024 * sizeof(glm::vec4));
+  // auto buf_ptr = std::make_shared<core::Buffer>(1024 * sizeof(glm::vec4));
+  // core::ComputeShader shader{engine.get_device_ptr(), "None"};
 
-  auto buf_ptr = std::make_shared<core::Buffer>(1024 * sizeof(glm::vec4));
+  auto ptr = std::make_unique<core::ComputeShader>(engine.get_device_ptr(), "None");
 
-  // core::ComputeShader shader{engine.get_disp(), "None"};
+  ptr.reset();
+
   std::cout << "Done!" << std::endl;
   return 0;
 }

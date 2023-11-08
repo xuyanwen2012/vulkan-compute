@@ -7,8 +7,8 @@
 #include "base_engine.hpp"
 #include "buffer.hpp"
 
-#include "command_buffer.hpp"
-#include "command_pool.hpp"
+// #include "command_buffer.hpp"
+// #include "command_pool.hpp"
 
 using InputT = glm::vec4;
 using OutputT = glm::uint;
@@ -24,20 +24,18 @@ using OutputT = glm::uint;
 
 namespace core {
 
-class ComputeEngine : BaseEngine {
+class ComputeEngine : public BaseEngine {
 public:
-  ComputeEngine()
-      : BaseEngine(), command_pool{std::make_shared<vk::Device>(device.device)},
-        command_buffer(command_pool, vk::CommandBufferLevel::ePrimary) {}
+  ComputeEngine() : BaseEngine() {}
 
   void run(const std::vector<InputT> &input_data) {}
 
 protected:
 private:
-  // vk::CommandPool command_pool;
-  // vk::CommandBuffer command_buffer;
-  HPPCommandBuffer command_buffer;
-  HPPCommandPool command_pool;
+  vk::CommandPool command_pool;
+  vk::CommandBuffer command_buffer;
+  // HPPCommandBuffer command_buffer;
+  // HPPCommandPool command_pool;
 
   vk::Pipeline pipeline;
   vk::PipelineLayout pipeline_layout;

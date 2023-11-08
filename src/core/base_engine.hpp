@@ -1,6 +1,8 @@
 #pragma once
 
 #include <iostream>
+#include <memory>
+#include <vulkan/vulkan.hpp>
 
 #include "VkBootstrap.h"
 #include "vk_mem_alloc.h"
@@ -27,7 +29,10 @@ public:
     destroy_instance(instance);
   }
 
-  [[nodiscard]] vkb::DispatchTable &get_disp() { return disp; }
+  [[nodiscard]] vkb::Device &get_device() { return device; }
+  [[nodiscard]] auto get_device_ptr() {
+    return std::make_shared<vk::Device>(device.device);
+  }
 
 private:
   void device_initialization() {
