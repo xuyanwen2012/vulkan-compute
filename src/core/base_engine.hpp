@@ -49,9 +49,8 @@ private:
     // Vulkan pick physical device (2/3)
     vkb::PhysicalDeviceSelector selector{instance};
     auto phys_ret =
-        selector
-            .defer_surface_initialization()
-            // .set_minimum_version(1, 2)
+        selector.defer_surface_initialization()
+            .set_minimum_version(1, 2)
             .prefer_gpu_device_type(vkb::PreferredDeviceType::integrated)
             .allow_any_gpu_device_type(false)
             .select();
