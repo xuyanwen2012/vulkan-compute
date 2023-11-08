@@ -18,6 +18,10 @@ if is_mode("release") then
     set_optimize("fastest")
 end
 
+-- before_build(function (target) 
+--     os.exec("./compile_shaders.sh")
+-- end)
+
 target("vulkan-compute")
 set_default(true)
 set_kind("binary")

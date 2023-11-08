@@ -22,12 +22,8 @@ VmaAllocator g_allocator;
 int main(int argc, char **argv) {
   core::ComputeEngine engine{};
 
-  // auto buf_ptr = std::make_shared<core::Buffer>(1024 * sizeof(glm::vec4));
-  // core::ComputeShader shader{engine.get_device_ptr(), "None"};
-
-  auto ptr = std::make_unique<core::ComputeShader>(engine.get_device_ptr(), "None");
-
-  ptr.reset();
+  auto buf_ptr = std::make_shared<core::Buffer>(1024 * sizeof(glm::vec4));
+  core::ComputeShader shader{engine.get_device_ptr(), "None"};
 
   std::cout << "Done!" << std::endl;
   return 0;

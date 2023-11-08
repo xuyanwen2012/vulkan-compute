@@ -9,6 +9,10 @@
 
 namespace core {
 
+class Buffer;
+
+using BufferReference = std::reference_wrapper<const Buffer>;
+
 class Buffer {
 public:
   // I provide some default flags for the buffer usage

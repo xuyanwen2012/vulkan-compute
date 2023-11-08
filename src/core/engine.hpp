@@ -26,16 +26,48 @@ namespace core {
 
 class ComputeEngine : public BaseEngine {
 public:
-  ComputeEngine() : BaseEngine() {}
+  ComputeEngine() : BaseEngine() {
+    vkhDevice = device.device;
+
+    create_command_pool();
+  }
+
+  ~ComputeEngine() {
+    vkhDevice.freeCommandBuffers(command_pool, command_buffer);
+    vkhDevice.destroyCommandPool(command_pool);
+  }
 
   void run(const std::vector<InputT> &input_data) {}
 
 protected:
+  void create_command_pool() {
+    vk::CommandPoolCreateInfo createInfo;
+    createInfo.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer)
+        .setQueueFamilyIndex(
+            device.get_queue_index(vkb::QueueType::compute).value());
+
+    command_pool = vkhDevice.createCommandPool(createInfo);
+
+    vk::CommandBufferAllocateInfo commandBufferAllocateInfo;
+    commandBufferAllocateInfo.setCommandBufferCount(1)
+        .setLevel(vk::CommandBufferLevel::ePrimary)
+        .setCommandPool(command_pool);
+
+    command_buffer =
+        vkhDevice.allocateCommandBuffers(commandBufferAllocateInfo).front();
+  }
+
 private:
+  vk::Device vkhDevice;
+
+  // Only need one for entire application,
+  // otherthings are: instance, physical device, device, queue
+  // and global VMA allocator
   vk::CommandPool command_pool;
-  vk::CommandBuffer command_buffer;
-  // HPPCommandBuffer command_buffer;
-  // HPPCommandPool command_pool;
+  // std::vector<vk::CommandPool> m_threadCommandPool;
+
+  vk::CommandBuffer command_buffer; // immediate command buffer
+  // These are for each compute shader (pipeline)
 
   vk::Pipeline pipeline;
   vk::PipelineLayout pipeline_layout;
@@ -44,6 +76,9 @@ private:
   vk::DescriptorSet descriptor_set;
 
   std::vector<Buffer> usm_buffers;
+
+  // std::shared_ptr<DescriptorAllocator> m_descriptorAllocator;
+  // std::shared_ptr<DescriptorLayoutCache> m_descriptorLayoutCache;
 };
 
 } // namespace core
