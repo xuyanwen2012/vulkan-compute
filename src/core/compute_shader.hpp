@@ -6,7 +6,7 @@
 #include <spirv_cross/spirv_cross.hpp>
 #include <unordered_map>
 
-#include "../../shaders/morton_shader.hpp"
+#include "../../shaders/all_shaders.hpp"
 #include "base.hpp"
 
 namespace core {

@@ -8,7 +8,7 @@
 namespace core {
 
 // Need a global allocator for VMA
-extern VmaAllocator allocator;
+extern VmaAllocator g_allocator;
 
 // Base Engine does The Setup. Single device, single queue
 class BaseEngine {
@@ -20,8 +20,8 @@ public:
   }
 
   ~BaseEngine() {
-    if (allocator != VK_NULL_HANDLE) {
-      vmaDestroyAllocator(allocator);
+    if (g_allocator != VK_NULL_HANDLE) {
+      vmaDestroyAllocator(g_allocator);
     }
     destroy_device(device);
     destroy_instance(instance);
@@ -87,7 +87,7 @@ private:
   }
 
   void vma_initialization() {
-    if (allocator != VK_NULL_HANDLE) {
+    if (g_allocator != VK_NULL_HANDLE) {
       return;
     }
 
@@ -97,7 +97,7 @@ private:
         .instance = instance.instance,
     };
 
-    vmaCreateAllocator(&allocator_create_info, &allocator);
+    vmaCreateAllocator(&allocator_create_info, &g_allocator);
   }
 
 protected:
