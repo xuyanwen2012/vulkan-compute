@@ -33,13 +33,13 @@ public:
     };
 
     VmaAllocationInfo allocation_info{};
-    auto result = vmaCreateBuffer(
-        g_allocator,
-        reinterpret_cast<const VkBufferCreateInfo *>(&buffer_create_info),
-        &memory_info, reinterpret_cast<VkBuffer *>(&get_handle()), &allocation,
-        &allocation_info);
 
-    if (result != VK_SUCCESS) {
+    if (auto result = vmaCreateBuffer(
+            g_allocator,
+            reinterpret_cast<const VkBufferCreateInfo *>(&buffer_create_info),
+            &memory_info, reinterpret_cast<VkBuffer *>(&get_handle()),
+            &allocation, &allocation_info);
+        result != VK_SUCCESS) {
       throw std::runtime_error("Cannot create HPPBuffer");
     }
 
@@ -61,6 +61,8 @@ public:
 
   Buffer(const Buffer &) = delete;
 
+  Buffer(Buffer &&other);
+
   ~Buffer() {
     if (get_handle() && (allocation != VK_NULL_HANDLE)) {
       //   unmap();
@@ -80,16 +82,22 @@ public:
   };
   vk::DeviceSize get_size() const { return size; };
 
-  void update(const std::vector<std::byte> &data, size_t offset) {
+  void update(const std::vector<std::byte> &data, size_t offset = 0) {
     update(data.data(), data.size(), offset);
   }
 
-  void update(const void *data, const size_t size, const size_t offset) {
+  void update(const void *data, const size_t size, const size_t offset = 0) {
     update(reinterpret_cast<const std::byte *>(data), size, offset);
   }
 
-  void update(const std::byte *data, const size_t size, const size_t offset) {
+  void update(const std::byte *data, const size_t size,
+              const size_t offset = 0) {
     std::memcpy(mapped_data + offset, data, size);
+  }
+
+  template <class T>
+  void convert_and_update(const T &object, const size_t offset = 0) {
+    update(reinterpret_cast<const std::byte *>(&object), sizeof(T), offset);
   }
 
 private:
@@ -98,12 +106,10 @@ private:
   const vk::DeviceSize size = 0;
   std::byte *mapped_data = nullptr;
 
-  const bool persistent = false;
-  bool mapped = false;
+  const bool persistent = true;
+  bool mapped = true;
 
-  // handle
-
-  // TODO: Fix this
+  // TODO: add these as handle
   inline vk::Buffer &get_handle() { return buffer; };
   inline const vk::Buffer &get_handle() const { return buffer; }
   vk::Buffer buffer;

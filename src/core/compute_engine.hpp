@@ -5,6 +5,7 @@
 #include <vulkan/vulkan.hpp>
 
 #include "base_engine.hpp"
+#include "buffer.hpp"
 
 using InputT = glm::vec4;
 using OutputT = glm::uint;
@@ -22,7 +23,6 @@ namespace core {
 
 class ComputeEngine : BaseEngine {
 public:
-
   void run(const std::vector<InputT> &input_data) {}
 
 private:
@@ -35,7 +35,7 @@ private:
   vk::DescriptorPool descriptor_pool;
   vk::DescriptorSet descriptor_set;
 
-  // std::vector<std::unique_ptr<Buffer>> usm_buffers;
+  std::vector<std::unique_ptr<Buffer>> usm_buffers;
 };
 
 } // namespace core

@@ -4,8 +4,7 @@
 
 namespace core {
 
-template <typename HandleT> 
-class VulkanResource {
+template <typename HandleT> class VulkanResource {
 public:
   VulkanResource() = default;
   VulkanResource(const VulkanResource &) = delete;
