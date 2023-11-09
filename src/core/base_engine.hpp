@@ -78,7 +78,6 @@ private:
     }
 
     device_ = dev_ret.value();
-    disp_ = device_.make_table();
   }
 
   void get_queues() {
@@ -108,7 +107,6 @@ private:
 protected:
   vkb::Instance instance_;
   vkb::Device device_;
-  vkb::DispatchTable disp_;
   VkQueue queue_;
 };
 } // namespace core

@@ -26,6 +26,6 @@ target("vulkan-compute")
 set_default(true)
 set_kind("binary")
 add_files("src/*.cpp", "src/core/*.cpp")
-add_headerfiles("src/*.hpp", "src/core/*.hpp")
+add_headerfiles("src/core/*.hpp")
 add_packages("vk-bootstrap", "vulkan-memory-allocator", "spirv-cross", "glm",
              "vulkansdk")

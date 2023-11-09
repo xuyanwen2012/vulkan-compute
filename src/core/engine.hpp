@@ -67,17 +67,13 @@ public:
     vkh_device_.destroyPipeline(pipeline_);
   }
 
-  void submit(const vk::CommandBuffer &command_buffer) const {
-    vk::SubmitInfo submit_info;
-    submit_info.setCommandBuffers(command_buffer);
+  void submit_and_wait(const vk::CommandBuffer &command_buffer) const {
+    const auto submit_info =
+        vk::SubmitInfo().setCommandBufferCount(1).setPCommandBuffers(
+            &command_buffer);
+    vkh_queue_.submit(submit_info, immediate_fence_);
 
-    if (const auto result = disp_.queueSubmit(
-            queue_, 1, reinterpret_cast<VkSubmitInfo *>(&submit_info),
-            VK_NULL_HANDLE);
-        result != VK_SUCCESS) {
-      throw std::runtime_error("Cannot submit queue");
-    }
-
+    // wait
     const auto wait_result =
         vkh_device_.waitForFences(immediate_fence_, false, UINT64_MAX);
     assert(wait_result == vk::Result::eSuccess);
@@ -126,18 +122,7 @@ public:
 
     // ------- SUBMIT COMMAND BUFFER --------
 
-    const auto submit_info = vk::SubmitInfo()
-                                 .setCommandBufferCount(1)
-                                 // wait semaphores?
-                                 .setCommandBuffers(command_buffer_);
-
-    vkh_queue_.submit(submit_info, immediate_fence_);
-
-    // Wait
-    const auto wait_fence_result =
-        vkh_device_.waitForFences(immediate_fence_, false, UINT64_MAX);
-    assert(wait_fence_result == vk::Result::eSuccess);
-    vkh_device_.resetFences(immediate_fence_);
+    submit_and_wait(command_buffer_);
   }
 
 protected:
