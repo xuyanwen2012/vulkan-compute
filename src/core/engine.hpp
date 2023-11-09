@@ -36,9 +36,9 @@ public:
     // Tmp
     vkh_device_ = device_.device;
 
-    // Create instance, device, etc. Done in BaseEngine
     create_descriptor_set_layout();
     create_descriptor_pool();
+    
     create_sync_object();
 
     // Tmp
@@ -289,11 +289,12 @@ private:
 
   // These are for each compute shader (pipeline)
   vk::Pipeline pipeline_;
+  vk::PipelineCache pipeline_cache_;
   vk::PipelineLayout pipeline_layout_;
-
   vk::DescriptorSetLayout descriptor_set_layout_;
   vk::DescriptorPool descriptor_pool_;
   vk::DescriptorSet descriptor_set_;
+  // and module
 
 public:
   // Warning: use pointer, other wise the buffer's content might be gone
