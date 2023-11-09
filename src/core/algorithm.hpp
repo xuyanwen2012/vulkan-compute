@@ -15,19 +15,20 @@ using Workgroup = std::array<uint32_t, 3>;
 class Algorithm {
 public:
   Algorithm(std::shared_ptr<vk::Device> device,
-            const std::vector<uint32_t> &spirv = {},
+            // const std::vector<uint32_t> &spirv = {},
             const Workgroup &workgroup = {},
             const std::vector<uint32_t> &specializationConstants = {}) {
-    rebuild(spirv, workgroup, specializationConstants);
+    rebuild(workgroup, specializationConstants);
   }
 
   ~Algorithm() { destroy(); }
 
   // Rebuild function to reconstruct algorithm with configuration parameters
   //  * to create the underlying resources
-  void rebuild(const std::vector<uint32_t> &spirv = {},
-               const Workgroup &workgroup = {},
-               const std::vector<uint32_t> &specializationConstants = {}) {
+  void rebuild(
+      // const std::vector<uint32_t> &spirv = {},
+      const Workgroup &workgroup = {},
+      const std::vector<uint32_t> &specializationConstants = {}) {
 
     if (specializationConstants.size()) {
       if (this->mSpecializationConstantsData) {
@@ -50,7 +51,7 @@ public:
     createPipeline();
   }
 
-  void recordDispatch(const vk::CommandBuffer &commandBuffer);
+  void recordDispatch(const vk::CommandBuffer &commandBuffer) {}
 
   // binding pipeline etc
   void recordBindCore(const vk::CommandBuffer &commandBuffer) {
@@ -229,7 +230,7 @@ private:
 
   // -------------- ALWAYS OWNED RESOURCES
 
-  std::vector<uint32_t> spirv_;
+  //   std::vector<uint32_t> spirv_;
   void *mSpecializationConstantsData = nullptr;
   uint32_t mSpecializationConstantsDataTypeMemorySize = 0;
   uint32_t mSpecializationConstantsSize = 0;
