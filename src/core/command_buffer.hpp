@@ -3,10 +3,11 @@
 #include "buffer.hpp"
 
 namespace core {
-// struct BufferInfo {
-//   BufferReference resource;
-//   uint32_t offset = 0;
-// };
+
+struct BufferInfo {
+  BufferReference resource;
+  uint32_t offset = 0;
+};
 
 class CommandBuffer {
 public:

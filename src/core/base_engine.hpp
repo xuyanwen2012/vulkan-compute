@@ -15,18 +15,14 @@ extern VmaAllocator g_allocator;
 class BaseEngine {
 public:
   BaseEngine() {
-	  try
-	  {
-	      device_initialization();
-	      get_queues();
-	      vma_initialization();
-	  }
-	  catch (std::exception& e)
-	  {
-        std::cout << e.what() << std::endl;
-              exit(EXIT_FAILURE);
-	  }
-
+    try {
+      device_initialization();
+      get_queues();
+      vma_initialization();
+    } catch (std::exception &e) {
+      std::cout << e.what() << std::endl;
+      exit(EXIT_FAILURE);
+    }
   }
 
   ~BaseEngine() {

@@ -45,8 +45,7 @@ public:
     usm_buffers_.emplace_back(std::make_shared<Buffer>(
         get_device_ptr(), InputSize() * sizeof(InputT)));
     usm_buffers_.emplace_back(std::make_shared<Buffer>(
-        get_device_ptr(), InputSize() *
-        sizeof(OutputT)));
+        get_device_ptr(), InputSize() * sizeof(OutputT)));
 
     create_descriptor_set();
     create_compute_pipeline();
@@ -65,8 +64,7 @@ public:
   }
 
   void submit_and_wait(const vk::CommandBuffer &command_buffer) const {
-    const auto submit_info =
-        vk::SubmitInfo().setCommandBuffers(command_buffer);
+    const auto submit_info = vk::SubmitInfo().setCommandBuffers(command_buffer);
 
     queue_.submit(submit_info, immediate_fence_);
 
@@ -96,20 +94,21 @@ public:
         vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
     immediate_command_buffer_.begin(begin_info);
 
-    immediate_command_buffer_.bindPipeline(vk::PipelineBindPoint::eCompute, pipeline_);
-    immediate_command_buffer_.bindDescriptorSets(vk::PipelineBindPoint::eCompute,
-                                       pipeline_layout_, 0, descriptor_set_,
-                                       nullptr);
+    immediate_command_buffer_.bindPipeline(vk::PipelineBindPoint::eCompute,
+                                           pipeline_);
+    immediate_command_buffer_.bindDescriptorSets(
+        vk::PipelineBindPoint::eCompute, pipeline_layout_, 0, descriptor_set_,
+        nullptr);
     // push const
     constexpr uint32_t default_push[3]{0, 0, 0};
-    immediate_command_buffer_.pushConstants(pipeline_layout_,
-                                  vk::ShaderStageFlagBits::eCompute, 0,
-                                  sizeof(default_push), default_push);
+    immediate_command_buffer_.pushConstants(
+        pipeline_layout_, vk::ShaderStageFlagBits::eCompute, 0,
+        sizeof(default_push), default_push);
 
     constexpr MyPushConst push_const{InputSize(), 0.0f, 1024.0f};
-    immediate_command_buffer_.pushConstants(pipeline_layout_,
-                                  vk::ShaderStageFlagBits::eCompute, 16,
-                                  sizeof(push_const), &push_const);
+    immediate_command_buffer_.pushConstants(
+        pipeline_layout_, vk::ShaderStageFlagBits::eCompute, 16,
+        sizeof(push_const), &push_const);
 
     // equivalent to CUDA number of blocks
     constexpr auto group_count_x = NumWorkGroup(InputSize());
@@ -124,8 +123,7 @@ public:
 
 protected:
   void create_descriptor_set_layout() {
-	  constexpr std::array bindings
-        {
+    constexpr std::array bindings{
         vk::DescriptorSetLayoutBinding()
             .setBinding(0)
             .setDescriptorType(vk::DescriptorType::eStorageBuffer)
@@ -135,11 +133,10 @@ protected:
             .setBinding(1)
             .setDescriptorType(vk::DescriptorType::eStorageBuffer)
             .setDescriptorCount(1)
-            .setStageFlags(vk::ShaderStageFlagBits::eCompute)
-        };
+            .setStageFlags(vk::ShaderStageFlagBits::eCompute)};
 
-	  const auto layout_create_info = vk::DescriptorSetLayoutCreateInfo()
-	                                      .setBindings(bindings);
+    const auto layout_create_info =
+        vk::DescriptorSetLayoutCreateInfo().setBindings(bindings);
     descriptor_set_layout_ =
         vkh_device_.createDescriptorSetLayout(layout_create_info, nullptr);
   }
@@ -149,15 +146,12 @@ protected:
   }
 
   void create_descriptor_pool() {
-    std::vector pool_sizes{
-        vk::DescriptorPoolSize()
-            .setType(vk::DescriptorType::eStorageBuffer)
-            .setDescriptorCount(2)};
+    std::vector pool_sizes{vk::DescriptorPoolSize()
+                               .setType(vk::DescriptorType::eStorageBuffer)
+                               .setDescriptorCount(2)};
 
     const auto descriptor_pool_create_info =
-        vk::DescriptorPoolCreateInfo()
-            .setMaxSets(1)
-            .setPoolSizes(pool_sizes);
+        vk::DescriptorPoolCreateInfo().setMaxSets(1).setPoolSizes(pool_sizes);
 
     descriptor_pool_ =
         vkh_device_.createDescriptorPool(descriptor_pool_create_info);
@@ -219,7 +213,7 @@ protected:
     constexpr std::array spec_map_content{ComputeShaderProcessUnit(), 1u, 1u};
     const auto specialization_info =
         vk::SpecializationInfo()
-			.setMapEntries(spec_map)
+            .setMapEntries(spec_map)
             //.setData(spec_map_content)
             .setDataSize(sizeof(uint32_t) * spec_map_content.size())
             .setPData(spec_map_content.data());
@@ -290,7 +284,7 @@ private:
   // and global VMA allocator
   vk::CommandPool command_pool_;
 
-  vk::CommandBuffer immediate_command_buffer_; 
+  vk::CommandBuffer immediate_command_buffer_;
   vk::Fence immediate_fence_;
 
   // These are for each compute shader (pipeline)

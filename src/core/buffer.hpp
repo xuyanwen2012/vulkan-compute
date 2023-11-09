@@ -1,12 +1,10 @@
 #pragma once
 
-// #include <memory>
-#include <utility>
 #include <vk_mem_alloc.h>
 #include <vulkan/vulkan.hpp>
 
-#include "vulkan_resource.hpp"
 #include "base_engine.hpp"
+#include "vulkan_resource.hpp"
 
 namespace core {
 class Buffer;
@@ -19,8 +17,7 @@ public:
   // For my purpose, I need to use the buffer as a storage buffer
   // And I want to use the unified shared memory
   explicit Buffer(
-      const std::shared_ptr<vk::Device>& device_ptr,
-      const vk::DeviceSize size,
+      const std::shared_ptr<vk::Device> &device_ptr, const vk::DeviceSize size,
       const vk::BufferUsageFlags buffer_usage =
           vk::BufferUsageFlagBits::eStorageBuffer |
           vk::BufferUsageFlagBits::eTransferDst,
@@ -68,14 +65,15 @@ public:
 
   Buffer(const Buffer &) = delete;
 
-  //Buffer(Buffer &&other) noexcept
-	 // : VulkanResource(device_ptr_), allocation_(std::exchange(other.allocation_, {})),
-	 //   memory_(std::exchange(other.memory_, {})),
-	 //   size_(std::exchange(other.size_, {})),
-	 //   mapped_data_(std::exchange(other.mapped_data_, {})),
-	 //   mapped_(std::exchange(other.mapped_, {}))
+  // Buffer(Buffer &&other) noexcept
+  //  : VulkanResource(device_ptr_),
+  //  allocation_(std::exchange(other.allocation_, {})),
+  //    memory_(std::exchange(other.memory_, {})),
+  //    size_(std::exchange(other.size_, {})),
+  //    mapped_data_(std::exchange(other.mapped_data_, {})),
+  //    mapped_(std::exchange(other.mapped_, {}))
   //{
-	 // std::cout << "move constructor" << std::endl;
+  // std::cout << "move constructor" << std::endl;
   //}
 
   ~Buffer() override {
@@ -90,7 +88,9 @@ public:
   [[nodiscard]] VmaAllocation get_allocation() const { return allocation_; }
   [[nodiscard]] const std::byte *get_data() const { return mapped_data_; }
   [[nodiscard]] vk::DeviceMemory get_memory() const { return memory_; }
-  [[nodiscard]] vk::DeviceAddress get_device_address() const { return device_ptr_->getBufferAddressKHR(get_handle()); }
+  [[nodiscard]] vk::DeviceAddress get_device_address() const {
+    return device_ptr_->getBufferAddressKHR(get_handle());
+  }
   [[nodiscard]] vk::DeviceSize get_size() const { return size_; }
 
   void update(const std::vector<std::byte> &data,

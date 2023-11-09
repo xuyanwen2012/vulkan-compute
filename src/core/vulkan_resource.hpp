@@ -5,10 +5,18 @@
 
 namespace core {
 
+/**
+ * @brief This abstract class provides a pointer to the device, so each Vulkan
+ * Components that inherits from this class can access the device. Need to pass
+ * in a  shared_ptr<vk::Device> to the constructor.
+ *
+ * @tparam HandleT The Vulkan handle type (e.g., vk::Buffer, vk::Image, etc.)
+ */
 template <typename HandleT> class VulkanResource {
 public:
   VulkanResource() = delete;
-  explicit VulkanResource(const std::shared_ptr<vk::Device>& device_ptr) : device_ptr_(device_ptr) {}
+  explicit VulkanResource(const std::shared_ptr<vk::Device> &device_ptr)
+      : device_ptr_(device_ptr) {}
 
   VulkanResource(const VulkanResource &) = delete;
   VulkanResource(VulkanResource &&) = delete;
@@ -17,8 +25,8 @@ public:
   VulkanResource &operator=(const VulkanResource &) = delete;
   VulkanResource &operator=(VulkanResource &&) = delete;
 
-  HandleT &get_handle() { return handle_; }
-  [[nodiscard]] const HandleT  &get_handle() const { return handle_; }
+  [[nodiscard]] HandleT &get_handle() { return handle_; }
+  [[nodiscard]] const HandleT &get_handle() const { return handle_; }
 
 protected:
   std::shared_ptr<vk::Device> device_ptr_;
