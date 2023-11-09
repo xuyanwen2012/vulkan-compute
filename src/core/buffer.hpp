@@ -5,6 +5,7 @@
 #include <vk_mem_alloc.h>
 #include <vulkan/vulkan.hpp>
 
+#include "vulkan_resource.hpp"
 #include "base_engine.hpp"
 
 namespace core {
@@ -12,12 +13,13 @@ class Buffer;
 
 using BufferReference = std::reference_wrapper<const Buffer>;
 
-class Buffer {
+class Buffer final : public VulkanResource<vk::Buffer> {
 public:
   // I provide some default flags for the buffer usage
   // For my purpose, I need to use the buffer as a storage buffer
   // And I want to use the unified shared memory
   explicit Buffer(
+      const std::shared_ptr<vk::Device>& device_ptr,
       const vk::DeviceSize size,
       const vk::BufferUsageFlags buffer_usage =
           vk::BufferUsageFlagBits::eStorageBuffer |
@@ -27,7 +29,7 @@ public:
           VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
           VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT |
           VMA_ALLOCATION_CREATE_MAPPED_BIT)
-      : size_(size),
+      : VulkanResource(device_ptr), size_(size),
         persistent_{(flags & VMA_ALLOCATION_CREATE_MAPPED_BIT) != 0} {
     const auto buffer_create_info =
         vk::BufferCreateInfo().setSize(size).setUsage(buffer_usage);
@@ -66,16 +68,17 @@ public:
 
   Buffer(const Buffer &) = delete;
 
-  Buffer(Buffer &&other) noexcept
-      : allocation_(std::exchange(other.allocation_, {})),
-        memory_(std::exchange(other.memory_, {})),
-        size_(std::exchange(other.size_, {})),
-        mapped_data_(std::exchange(other.mapped_data_, {})),
-        mapped_(std::exchange(other.mapped_, {})) {
-    std::cout << "move constructor" << std::endl;
-  }
+  //Buffer(Buffer &&other) noexcept
+	 // : VulkanResource(device_ptr_), allocation_(std::exchange(other.allocation_, {})),
+	 //   memory_(std::exchange(other.memory_, {})),
+	 //   size_(std::exchange(other.size_, {})),
+	 //   mapped_data_(std::exchange(other.mapped_data_, {})),
+	 //   mapped_(std::exchange(other.mapped_, {}))
+  //{
+	 // std::cout << "move constructor" << std::endl;
+  //}
 
-  ~Buffer() {
+  ~Buffer() override {
     if (get_handle() && allocation_ != VK_NULL_HANDLE) {
       vmaDestroyBuffer(g_allocator, get_handle(), allocation_);
     }
@@ -87,9 +90,7 @@ public:
   [[nodiscard]] VmaAllocation get_allocation() const { return allocation_; }
   [[nodiscard]] const std::byte *get_data() const { return mapped_data_; }
   [[nodiscard]] vk::DeviceMemory get_memory() const { return memory_; }
-  // uint64_t get_device_address() const {
-  //   return device_ptr->getBufferAddressKHR(get_handle());
-  // };
+  [[nodiscard]] vk::DeviceAddress get_device_address() const { return device_ptr_->getBufferAddressKHR(get_handle()); }
   [[nodiscard]] vk::DeviceSize get_size() const { return size_; }
 
   void update(const std::vector<std::byte> &data,
@@ -118,15 +119,7 @@ private:
   vk::DeviceSize size_ = 0;
   std::byte *mapped_data_ = nullptr;
 
-  const bool persistent_ = true;
+  bool persistent_ = true;
   bool mapped_ = true;
-
-  // TODO: add these as handle
-  vk::Buffer buffer_;
-  // std::shared_ptr<vk::Device> device_ptr_;
-
-public:
-  vk::Buffer &get_handle() { return buffer_; }
-  const vk::Buffer &get_handle() const { return buffer_; }
 };
 } // namespace core

@@ -9,9 +9,6 @@
 #include "buffer.hpp"
 #include "compute_shader.hpp"
 
-// #include "command_buffer.hpp"
-// #include "command_pool.hpp"
-
 using InputT = glm::vec4;
 using OutputT = glm::uint;
 
@@ -38,7 +35,6 @@ public:
   ComputeEngine() {
     // Tmp
     vkh_device_ = device_.device;
-    vkh_queue_ = queue_;
 
     // Create instance, device, etc. Done in BaseEngine
     create_descriptor_set_layout();
@@ -46,10 +42,11 @@ public:
     create_sync_object();
 
     // Tmp
-    usm_buffers_.emplace_back(
-        std::make_shared<Buffer>(InputSize() * sizeof(InputT)));
-    usm_buffers_.emplace_back(
-        std::make_shared<Buffer>(InputSize() * sizeof(OutputT)));
+    usm_buffers_.emplace_back(std::make_shared<Buffer>(
+        get_device_ptr(), InputSize() * sizeof(InputT)));
+    usm_buffers_.emplace_back(std::make_shared<Buffer>(
+        get_device_ptr(), InputSize() *
+        sizeof(OutputT)));
 
     create_descriptor_set();
     create_compute_pipeline();
@@ -59,7 +56,7 @@ public:
 
   ~ComputeEngine() {
     vkh_device_.destroyFence(immediate_fence_);
-    vkh_device_.freeCommandBuffers(command_pool_, command_buffer_);
+    vkh_device_.freeCommandBuffers(command_pool_, immediate_command_buffer_);
     vkh_device_.destroyCommandPool(command_pool_);
     vkh_device_.destroyDescriptorSetLayout(descriptor_set_layout_);
     vkh_device_.destroyDescriptorPool(descriptor_pool_);
@@ -69,9 +66,9 @@ public:
 
   void submit_and_wait(const vk::CommandBuffer &command_buffer) const {
     const auto submit_info =
-        vk::SubmitInfo().setCommandBufferCount(1).setPCommandBuffers(
-            &command_buffer);
-    vkh_queue_.submit(submit_info, immediate_fence_);
+        vk::SubmitInfo().setCommandBuffers(command_buffer);
+
+    queue_.submit(submit_info, immediate_fence_);
 
     // wait
     const auto wait_result =
@@ -91,63 +88,58 @@ public:
             .setLevel(vk::CommandBufferLevel::ePrimary)
             .setCommandBufferCount(1);
 
-    command_buffer_ =
+    immediate_command_buffer_ =
         vkh_device_.allocateCommandBuffers(cmd_buf_alloc_info).front();
 
     // ------- RECORD COMMAND BUFFER --------
     constexpr auto begin_info = vk::CommandBufferBeginInfo().setFlags(
         vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-    command_buffer_.begin(begin_info);
+    immediate_command_buffer_.begin(begin_info);
 
-    command_buffer_.bindPipeline(vk::PipelineBindPoint::eCompute, pipeline_);
-    command_buffer_.bindDescriptorSets(vk::PipelineBindPoint::eCompute,
+    immediate_command_buffer_.bindPipeline(vk::PipelineBindPoint::eCompute, pipeline_);
+    immediate_command_buffer_.bindDescriptorSets(vk::PipelineBindPoint::eCompute,
                                        pipeline_layout_, 0, descriptor_set_,
                                        nullptr);
     // push const
     constexpr uint32_t default_push[3]{0, 0, 0};
-    command_buffer_.pushConstants(pipeline_layout_,
+    immediate_command_buffer_.pushConstants(pipeline_layout_,
                                   vk::ShaderStageFlagBits::eCompute, 0,
                                   sizeof(default_push), default_push);
 
     constexpr MyPushConst push_const{InputSize(), 0.0f, 1024.0f};
-    command_buffer_.pushConstants(pipeline_layout_,
+    immediate_command_buffer_.pushConstants(pipeline_layout_,
                                   vk::ShaderStageFlagBits::eCompute, 16,
                                   sizeof(push_const), &push_const);
 
     // equivalent to CUDA number of blocks
     constexpr auto group_count_x = NumWorkGroup(InputSize());
 
-    command_buffer_.dispatch(group_count_x, 1, 1);
-    command_buffer_.end();
+    immediate_command_buffer_.dispatch(group_count_x, 1, 1);
+    immediate_command_buffer_.end();
 
     // ------- SUBMIT COMMAND BUFFER --------
 
-    submit_and_wait(command_buffer_);
+    submit_and_wait(immediate_command_buffer_);
   }
 
 protected:
   void create_descriptor_set_layout() {
-    std::vector<vk::DescriptorSetLayoutBinding> bindings;
-
-    // Input
-    bindings.emplace_back(
+	  constexpr std::array bindings
+        {
         vk::DescriptorSetLayoutBinding()
             .setBinding(0)
             .setDescriptorType(vk::DescriptorType::eStorageBuffer)
             .setDescriptorCount(1)
-            .setStageFlags(vk::ShaderStageFlagBits::eCompute));
-
-    // Output
-    bindings.emplace_back(
+            .setStageFlags(vk::ShaderStageFlagBits::eCompute),
         vk::DescriptorSetLayoutBinding()
             .setBinding(1)
             .setDescriptorType(vk::DescriptorType::eStorageBuffer)
             .setDescriptorCount(1)
-            .setStageFlags(vk::ShaderStageFlagBits::eCompute));
+            .setStageFlags(vk::ShaderStageFlagBits::eCompute)
+        };
 
-    const auto layout_create_info = vk::DescriptorSetLayoutCreateInfo()
-                                        .setBindingCount(bindings.size())
-                                        .setPBindings(bindings.data());
+	  const auto layout_create_info = vk::DescriptorSetLayoutCreateInfo()
+	                                      .setBindings(bindings);
     descriptor_set_layout_ =
         vkh_device_.createDescriptorSetLayout(layout_create_info, nullptr);
   }
@@ -157,18 +149,15 @@ protected:
   }
 
   void create_descriptor_pool() {
-    std::vector<vk::DescriptorPoolSize> pool_sizes;
-
-    //  Compute pipelines uses a storage image for image reads and writes
-    pool_sizes.emplace_back(vk::DescriptorPoolSize()
-                                .setType(vk::DescriptorType::eStorageBuffer)
-                                .setDescriptorCount(2));
+    std::vector pool_sizes{
+        vk::DescriptorPoolSize()
+            .setType(vk::DescriptorType::eStorageBuffer)
+            .setDescriptorCount(2)};
 
     const auto descriptor_pool_create_info =
         vk::DescriptorPoolCreateInfo()
             .setMaxSets(1)
-            .setPoolSizeCount(pool_sizes.size())
-            .setPPoolSizes(pool_sizes.data());
+            .setPoolSizes(pool_sizes);
 
     descriptor_pool_ =
         vkh_device_.createDescriptorPool(descriptor_pool_create_info);
@@ -228,11 +217,10 @@ protected:
     };
 
     constexpr std::array spec_map_content{ComputeShaderProcessUnit(), 1u, 1u};
-
     const auto specialization_info =
         vk::SpecializationInfo()
-            .setMapEntryCount(spec_map.size())
-            .setPMapEntries(spec_map.data())
+			.setMapEntries(spec_map)
+            //.setData(spec_map_content)
             .setDataSize(sizeof(uint32_t) * spec_map_content.size())
             .setPData(spec_map_content.data());
 
@@ -289,26 +277,23 @@ protected:
             .setLevel(vk::CommandBufferLevel::ePrimary)
             .setCommandPool(command_pool_);
 
-    command_buffer_ =
+    immediate_command_buffer_ =
         vkh_device_.allocateCommandBuffers(command_buffer_allocate_info)
             .front();
   }
 
 private:
   vk::Device vkh_device_;
-  vk::Queue vkh_queue_;
 
   // Only need one for entire application,
-  // otherthings are: instance, physical device, device, queue
+  // other things are: instance, physical device, device, queue
   // and global VMA allocator
   vk::CommandPool command_pool_;
-  // std::vector<vk::CommandPool> m_threadCommandPool;
 
-  vk::CommandBuffer command_buffer_; // immediate command buffer
-
+  vk::CommandBuffer immediate_command_buffer_; 
   vk::Fence immediate_fence_;
-  // These are for each compute shader (pipeline)
 
+  // These are for each compute shader (pipeline)
   vk::Pipeline pipeline_;
   vk::PipelineLayout pipeline_layout_;
 
@@ -316,8 +301,8 @@ private:
   vk::DescriptorPool descriptor_pool_;
   vk::DescriptorSet descriptor_set_;
 
-  // Warning: use pointer, other wise the buffer's content might be gone
 public:
+  // Warning: use pointer, other wise the buffer's content might be gone
   std::vector<std::shared_ptr<Buffer>> usm_buffers_;
 
   // std::shared_ptr<DescriptorAllocator> m_descriptorAllocator;

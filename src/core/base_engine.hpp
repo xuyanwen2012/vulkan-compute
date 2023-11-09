@@ -15,9 +15,18 @@ extern VmaAllocator g_allocator;
 class BaseEngine {
 public:
   BaseEngine() {
-    device_initialization();
-    get_queues();
-    vma_initialization();
+	  try
+	  {
+	      device_initialization();
+	      get_queues();
+	      vma_initialization();
+	  }
+	  catch (std::exception& e)
+	  {
+        std::cout << e.what() << std::endl;
+              exit(EXIT_FAILURE);
+	  }
+
   }
 
   ~BaseEngine() {
@@ -56,7 +65,8 @@ private:
     auto phys_ret =
         selector.defer_surface_initialization()
             .set_minimum_version(1, 2)
-            .prefer_gpu_device_type(vkb::PreferredDeviceType::integrated)
+            .prefer_gpu_device_type(vkb::PreferredDeviceType::discrete)
+            //.prefer_gpu_device_type(vkb::PreferredDeviceType::integrated)
             .allow_any_gpu_device_type(false)
             .select();
 
@@ -107,6 +117,6 @@ private:
 protected:
   vkb::Instance instance_;
   vkb::Device device_;
-  VkQueue queue_;
+  vk::Queue queue_;
 };
 } // namespace core
