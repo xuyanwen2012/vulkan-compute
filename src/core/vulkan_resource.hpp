@@ -15,8 +15,8 @@ namespace core {
 template <typename HandleT> class VulkanResource {
 public:
   VulkanResource() = delete;
-  explicit VulkanResource(const std::shared_ptr<vk::Device> &device_ptr)
-      : device_ptr_(device_ptr) {}
+  explicit VulkanResource(std::shared_ptr<vk::Device> device_ptr)
+      : device_ptr_{std::move(device_ptr)} {}
 
   VulkanResource(const VulkanResource &) = delete;
   VulkanResource(VulkanResource &&) = delete;
@@ -29,6 +29,8 @@ public:
   [[nodiscard]] const HandleT &get_handle() const { return handle_; }
 
 protected:
+  virtual void destroy() = 0;
+
   std::shared_ptr<vk::Device> device_ptr_;
   HandleT handle_;
 };

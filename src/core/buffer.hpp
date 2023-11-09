@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vk_mem_alloc.h>
+#include <utility>
 #include <vulkan/vulkan.hpp>
 
 #include "base_engine.hpp"
@@ -17,7 +18,7 @@ public:
   // For my purpose, I need to use the buffer as a storage buffer
   // And I want to use the unified shared memory
   explicit Buffer(
-      const std::shared_ptr<vk::Device> &device_ptr, const vk::DeviceSize size,
+      std::shared_ptr<vk::Device> device_ptr, const vk::DeviceSize size,
       const vk::BufferUsageFlags buffer_usage =
           vk::BufferUsageFlagBits::eStorageBuffer |
           vk::BufferUsageFlagBits::eTransferDst,
@@ -26,7 +27,7 @@ public:
           VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
           VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT |
           VMA_ALLOCATION_CREATE_MAPPED_BIT)
-      : VulkanResource(device_ptr), size_(size),
+      : VulkanResource(std::move(device_ptr)), size_(size),
         persistent_{(flags & VMA_ALLOCATION_CREATE_MAPPED_BIT) != 0} {
     const auto buffer_create_info =
         vk::BufferCreateInfo().setSize(size).setUsage(buffer_usage);
@@ -65,21 +66,8 @@ public:
 
   Buffer(const Buffer &) = delete;
 
-  // Buffer(Buffer &&other) noexcept
-  //  : VulkanResource(device_ptr_),
-  //  allocation_(std::exchange(other.allocation_, {})),
-  //    memory_(std::exchange(other.memory_, {})),
-  //    size_(std::exchange(other.size_, {})),
-  //    mapped_data_(std::exchange(other.mapped_data_, {})),
-  //    mapped_(std::exchange(other.mapped_, {}))
-  //{
-  // std::cout << "move constructor" << std::endl;
-  //}
-
   ~Buffer() override {
-    if (get_handle() && allocation_ != VK_NULL_HANDLE) {
-      vmaDestroyBuffer(g_allocator, get_handle(), allocation_);
-    }
+    destroy();
   }
 
   Buffer &operator=(const Buffer &) = delete;
@@ -112,6 +100,14 @@ public:
   void convert_and_update(const T &object, const size_t offset = 0) {
     update(reinterpret_cast<const std::byte *>(&object), sizeof(T), offset);
   }
+
+protected:
+    void destroy() override
+    {
+	    if (get_handle() && allocation_ != VK_NULL_HANDLE) {
+	      vmaDestroyBuffer(g_allocator, get_handle(), allocation_);
+	    }
+    }
 
 private:
   VmaAllocation allocation_ = VK_NULL_HANDLE;

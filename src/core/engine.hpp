@@ -94,8 +94,10 @@ public:
 
     // ------- RECORD COMMAND BUFFER --------
 
-    // algorithm_.recordBindCore(immediate_command_buffer_);
-    // algorithm_.recordDispatch(immediate_command_buffer_);
+     algorithm_.record_bind_core(immediate_command_buffer_);
+
+
+     algorithm_.record_dispatch(immediate_command_buffer_);
 
     // constexpr auto begin_info = vk::CommandBufferBeginInfo().setFlags(
     //     vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
