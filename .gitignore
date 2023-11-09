@@ -5,4 +5,5 @@ build/
 # MacOS Cache
 .DS_Store
 
-
+# Generated Visual Studio Solution
+vsxmake2022
