@@ -35,33 +35,9 @@ namespace core {
 class ComputeEngine : public BaseEngine {
 public:
   ComputeEngine() {
-    //
-    manage_resources_ = true;
-
-    // Tmp
-    // algorithm_ = std::make_unique<Algorithm>(get_device_ptr());
-
-    // algorithms_.push_back(Algorithm(get_device_ptr()));
-
     vkh_device_ = device_.device;
-
     create_sync_object();
-
     create_command_pool();
-
-    // algorithm_->rebuild();
-
-    // create_descriptor_set_layout();
-    // create_descriptor_pool();
-
-    // Tmp
-    // usm_buffers_.emplace_back(std::make_shared<Buffer>(
-    //     get_device_ptr(), InputSize() * sizeof(InputT)));
-    // usm_buffers_.emplace_back(std::make_shared<Buffer>(
-    //     get_device_ptr(), InputSize() * sizeof(OutputT)));
-
-    // create_descriptor_set();
-    // create_compute_pipeline();
   }
 
   ~ComputeEngine() {
@@ -70,20 +46,6 @@ public:
   }
 
   void destory() {
-    // algorithm_.reset();
-
-    // if (this->mManageResources && this->mManagedAlgorithms.size()) {
-    //     KP_LOG_DEBUG("Kompute Manager explicitly freeing algorithms");
-    //     for (const std::weak_ptr<Algorithm>& weakAlgorithm :
-    //          this->mManagedAlgorithms) {
-    //         if (std::shared_ptr<Algorithm> algorithm = weakAlgorithm.lock())
-    //         {
-    //             algorithm->destroy();
-    //         }
-    //     }
-    //     this->mManagedAlgorithms.clear();
-    // }
-
     if (manage_resources_ && !yx_algorithms_.empty()) {
       spdlog::debug("ComputeEngine::destory() explicitly freeing algorithms");
       for (const std::weak_ptr<YxAlgorithm> &weak_algorithm : yx_algorithms_) {
@@ -109,18 +71,6 @@ public:
     vkh_device_.destroyCommandPool(command_pool_);
   }
 
-  // [[nodiscard]] std::shared_ptr<Algorithm>
-  // algorithm(const Workgroup &workgroup = {},
-  //           const std::vector<uint32_t> &specialization_constants = {},
-  //           const std::vector<float> &push_consts = {}) {
-  //   auto algorithm = std::make_shared<Algorithm>(
-  //       get_device_ptr(), workgroup, specialization_constants, push_consts);
-  //   if (manage_resources_) {
-  //     algorithms_.push_back(algorithm);
-  //   }
-  //   return algorithm;
-  // }
-
   [[nodiscard]] std::shared_ptr<Buffer> yx_buffer(vk::DeviceSize size) {
     auto buf = std::make_shared<Buffer>(get_device_ptr(), size);
     if (manage_resources_) {
@@ -129,12 +79,10 @@ public:
     return buf;
   }
 
-  [[nodiscard]] std::shared_ptr<YxAlgorithm>
-  yx_algorithm(const std::vector<std::shared_ptr<Buffer>> &buffers,
-               const std::array<uint32_t, 3> &workgroup,
-               const std::vector<float> &pushConstants) {
-    auto algo = std::make_shared<YxAlgorithm>(get_device_ptr(), buffers,
-                                              workgroup, pushConstants);
+  template <typename... Args>
+  [[nodiscard]] std::shared_ptr<YxAlgorithm> yx_algorithm(Args &&...args) {
+    auto algo = std::make_shared<YxAlgorithm>(get_device_ptr(),
+                                              std::forward<Args>(args)...);
     if (manage_resources_) {
       yx_algorithms_.push_back(algo);
     }
@@ -154,9 +102,6 @@ public:
   }
 
   void run(const std::vector<InputT> &input_data) {
-    // write_data_to_buffer
-    // usm_buffers_[0]->update(input_data.data(), sizeof(InputT) * InputSize());
-
     // execute_sync
     const auto cmd_buf_alloc_info =
         vk::CommandBufferAllocateInfo()
@@ -205,142 +150,9 @@ public:
   }
 
 protected:
-  // void create_descriptor_set_layout() {
-  //   constexpr std::array bindings{
-  //       vk::DescriptorSetLayoutBinding()
-  //           .setBinding(0)
-  //           .setDescriptorType(vk::DescriptorType::eStorageBuffer)
-  //           .setDescriptorCount(1)
-  //           .setStageFlags(vk::ShaderStageFlagBits::eCompute),
-  //       vk::DescriptorSetLayoutBinding()
-  //           .setBinding(1)
-  //           .setDescriptorType(vk::DescriptorType::eStorageBuffer)
-  //           .setDescriptorCount(1)
-  //           .setStageFlags(vk::ShaderStageFlagBits::eCompute)};
-
-  //   const auto layout_create_info =
-  //       vk::DescriptorSetLayoutCreateInfo().setBindings(bindings);
-  //   descriptor_set_layout_ =
-  //       vkh_device_.createDescriptorSetLayout(layout_create_info, nullptr);
-  // }
-
   void create_sync_object() {
     immediate_fence_ = vkh_device_.createFence(vk::FenceCreateInfo());
   }
-
-  // void create_descriptor_pool() {
-  //   std::vector pool_sizes{vk::DescriptorPoolSize()
-  //                              .setType(vk::DescriptorType::eStorageBuffer)
-  //                              .setDescriptorCount(2)};
-
-  //   const auto descriptor_pool_create_info =
-  //       vk::DescriptorPoolCreateInfo().setMaxSets(1).setPoolSizes(pool_sizes);
-
-  //   descriptor_pool_ =
-  //       vkh_device_.createDescriptorPool(descriptor_pool_create_info);
-  // }
-
-  // void create_descriptor_set() {
-  //   const auto set_alloc_info = vk::DescriptorSetAllocateInfo()
-  //                                   .setDescriptorPool(descriptor_pool_)
-  //                                   .setDescriptorSetCount(1)
-  //                                   .setSetLayouts(descriptor_set_layout_);
-
-  //   descriptor_set_ =
-  //       vkh_device_.allocateDescriptorSets(set_alloc_info).front();
-
-  //   const auto in_buffer_info = vk::DescriptorBufferInfo()
-  //                                   .setBuffer(usm_buffers_[0]->get_handle())
-  //                                   .setOffset(0)
-  //                                   .setRange(usm_buffers_[0]->get_size());
-
-  //   const auto out_buffer_info = vk::DescriptorBufferInfo()
-  //                                    .setBuffer(usm_buffers_[1]->get_handle())
-  //                                    .setOffset(0)
-  //                                    .setRange(usm_buffers_[1]->get_size());
-
-  //   const std::array writes{
-  //       vk::WriteDescriptorSet()
-  //           .setDstSet(descriptor_set_)
-  //           .setDstBinding(0)
-  //           .setDstArrayElement(0)
-  //           .setDescriptorCount(1)
-  //           .setDescriptorType(vk::DescriptorType::eStorageBuffer)
-  //           .setBufferInfo(in_buffer_info),
-  //       vk::WriteDescriptorSet()
-  //           .setDstSet(descriptor_set_)
-  //           .setDstBinding(1)
-  //           .setDstArrayElement(0)
-  //           .setDescriptorCount(1)
-  //           .setDescriptorType(vk::DescriptorType::eStorageBuffer)
-  //           .setBufferInfo(out_buffer_info),
-  //   };
-
-  //   vkh_device_.updateDescriptorSets(writes.size(), writes.data(), 0,
-  //   nullptr);
-  // }
-
-  // void create_compute_pipeline() {
-  //   ComputeShader compute_module{get_device_ptr(), "None"};
-
-  //   // For CLSPV generated shader, need to use specialization constants to
-  //   pass
-  //   // the number of "ThreadsPerBlock" (CUDA term)
-  //   std::array spec_map{
-  //       vk::SpecializationMapEntry().setConstantID(0).setOffset(0).setSize(
-  //           sizeof(uint32_t)),
-  //       vk::SpecializationMapEntry().setConstantID(1).setOffset(4).setSize(
-  //           sizeof(uint32_t)),
-  //       vk::SpecializationMapEntry().setConstantID(2).setOffset(8).setSize(
-  //           sizeof(uint32_t)),
-  //   };
-
-  //   constexpr std::array spec_map_content{ComputeShaderProcessUnit(), 1u,
-  //   1u}; const auto specialization_info =
-  //       vk::SpecializationInfo()
-  //           .setMapEntries(spec_map)
-  //           //.setData(spec_map_content)
-  //           .setDataSize(sizeof(uint32_t) * spec_map_content.size())
-  //           .setPData(spec_map_content.data());
-
-  //   const auto shader_stage_create_info =
-  //       vk::PipelineShaderStageCreateInfo()
-  //           .setStage(vk::ShaderStageFlagBits::eCompute)
-  //           .setModule(compute_module.get_handle())
-  //           .setPName("foo")
-  //           .setPSpecializationInfo(&specialization_info);
-
-  //   // For CLSPV generated shaders, need to push 16 bytes of place holder
-  //   data,
-  //   // before pushing the actual constants used by the kernel function
-  //   constexpr auto push_const =
-  //       vk::PushConstantRange()
-  //           .setStageFlags(vk::ShaderStageFlagBits::eCompute)
-  //           .setOffset(0)
-  //           .setSize(16 + sizeof(MyPushConst));
-
-  //   // Create a Pipeline Layout (2/3)
-  //   const auto layout_create_info = vk::PipelineLayoutCreateInfo()
-  //                                       .setSetLayoutCount(1)
-  //                                       .setSetLayouts(descriptor_set_layout_)
-  //                                       .setPushConstantRangeCount(1)
-  //                                       .setPushConstantRanges(push_const);
-
-  //   pipeline_layout_ = vkh_device_.createPipelineLayout(layout_create_info);
-
-  //   // Pipeline itself (3/3)
-  //   const auto pipeline_create_info = vk::ComputePipelineCreateInfo()
-  //                                         .setStage(shader_stage_create_info)
-  //                                         .setLayout(pipeline_layout_);
-
-  //   auto result =
-  //       vkh_device_.createComputePipeline(nullptr, pipeline_create_info);
-  //   if (result.result != vk::Result::eSuccess) {
-  //     throw std::runtime_error("Cannot create compute pipeline");
-  //   }
-
-  //   pipeline_ = result.value; // pipeline_layout
-  // }
 
   void create_command_pool() {
     const auto create_info =
@@ -365,37 +177,17 @@ protected:
 private:
   vk::Device vkh_device_;
 
-  // Only need one for entire application,
-  // other things are: instance, physical device, device, queue
-  // and global VMA allocator
   vk::CommandPool command_pool_;
   vk::CommandBuffer immediate_command_buffer_;
   vk::Fence immediate_fence_;
 
-  // std::unique_ptr<Algorithm> algorithm_;
-
-  // std::vector<Algorithm> algorithms_;
-  // std::vector<std::weak_ptr<Algorithm>> algorithms_;
   std::vector<std::weak_ptr<YxAlgorithm>> yx_algorithms_;
   std::vector<std::weak_ptr<Buffer>> yx_buffers_;
 
-  // Algorithm algorithm_;
-
-  // These are for each compute shader (pipeline)
-  // vk::Pipeline pipeline_;
-  // vk::PipelineCache pipeline_cache_;
-  // vk::PipelineLayout pipeline_layout_;
-  // vk::DescriptorSetLayout descriptor_set_layout_;
-  // vk::DescriptorPool descriptor_pool_;
-  // vk::DescriptorSet descriptor_set_;
-  // and module
-
-  bool manage_resources_ = false;
+  // Should the engine manage the above resources?
+  bool manage_resources_ = true;
 
 public:
-  // Warning: use pointer, other wise the buffer's content might be gone
-  // std::vector<std::shared_ptr<Buffer>> usm_buffers_;
-
   // std::shared_ptr<DescriptorAllocator> m_descriptorAllocator;
   // std::shared_ptr<DescriptorLayoutCache> m_descriptorLayoutCache;
 };

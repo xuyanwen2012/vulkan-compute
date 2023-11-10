@@ -59,24 +59,11 @@ int main(int argc, char **argv) {
   std::vector<float> push_consts{0, 0, 0, 0};
 
   // std::vector<std::shared_ptr<core::Buffer>> params {in_buffer, out_buffer};
-  std::vector<std::shared_ptr<core::Buffer>> params{};
-
-  // std::shared_ptr<core::Buffer> a{
-  //     new core::Buffer(engine.get_device_ptr(), data.size() *
-  //     sizeof(float))};
-
-  // std::shared_ptr<core::Buffer> b{
-  //     new core::Buffer(engine.get_device_ptr(), data.size() *
-  //     sizeof(float))};
-
-  // auto b = std::make_shared<core::Buffer>(out_buffer);
-
-  // params.push_back(std::make_shared<core::Buffer>(in_buffer));
-  // params.push_back(std::make_shared<core::Buffer>(out_buffer));
 
   auto a = engine.yx_buffer(1024);
   auto b = engine.yx_buffer(1024);
-  auto algo = engine.yx_algorithm({a, b}, workgroup, push_consts);
+  std::vector<std::shared_ptr<core::Buffer>> params{a, b};
+  auto algo = engine.yx_algorithm("morton", params, workgroup, push_consts);
 
   // algo->set_push_constants(h_data);
   // algo->set_workgroup({32, 1, 1});

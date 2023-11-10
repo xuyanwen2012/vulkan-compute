@@ -24,16 +24,19 @@ class YxAlgorithm final : public VulkanResource<vk::ShaderModule> {
 
 public:
   YxAlgorithm(const std::shared_ptr<vk::Device> &device_ptr,
-              const std::vector<std::shared_ptr<Buffer>> &buffers,
+              const std::string_view spirv_filename,
+              const std::vector<std::shared_ptr<Buffer>> &buffers = {},
               const std::array<uint32_t, 3> &workgroup = {},
               const std::vector<float> &pushConstants = {})
-      : VulkanResource(device_ptr) {
+      : VulkanResource(device_ptr), spirv_filename_(spirv_filename),
+        usm_buffers_(buffers) {
     if (!buffers.empty()) {
-      spdlog::info("YxAlgorithm initialising with tensor size: {}",
-                   buffers.size());
+      spdlog::info("YxAlgorithm ({}) initialising with tensor size: {}",
+                   spirv_filename, buffers.size());
       rebuild(workgroup, pushConstants);
     } else {
-      spdlog::error("YxAlgorithm initialising with empty tensor");
+      spdlog::error("YxAlgorithm ({}) initialising with empty tensor",
+                    spirv_filename);
     }
   }
 
@@ -44,6 +47,8 @@ public:
 
   void rebuild(const std::array<uint32_t, 3> &workgroup,
                const std::vector<float> &pushConstants) {
+    spdlog::debug("YxAlgorithm::rebuild, workgroup_x: {}, pushConstants: {}",
+                  workgroup[0], pushConstants.size());
 
     if (!pushConstants.empty()) {
       if (push_constants_data_) {
@@ -78,12 +83,8 @@ public:
   template <typename T>
   void set_push_constants(const std::vector<T> &push_constants) {
     spdlog::debug("YxAlgorithm::set_push_constants", push_constants.size());
-
-    assert(!push_constants.empty());
     const uint32_t memory_size = sizeof(decltype(push_constants.back()));
     const uint32_t size = push_constants.size();
-    assert(memory_size > 0);
-    assert(size > 0);
     this->set_push_constants(push_constants.data(), size, memory_size);
   }
 
@@ -119,12 +120,9 @@ public:
 protected:
   // Basically setup the buffer, its descriptor set, binding etc.
   void create_parameters() {
-    // How many parameters in the shader? usually 2: input and output
-    constexpr auto num_parameters = 2u;
-
     // Pool size
     std::vector pool_sizes{vk::DescriptorPoolSize(
-        vk::DescriptorType::eStorageBuffer, num_parameters)};
+        vk::DescriptorType::eStorageBuffer, usm_buffers_.size())};
 
     // Descriptor pool
     const auto descriptor_pool_create_info =
@@ -134,8 +132,8 @@ protected:
 
     // Descriptor set
     std::vector<vk::DescriptorSetLayoutBinding> bindings;
-    bindings.reserve(num_parameters);
-    for (auto i = 0u; i < num_parameters; ++i) {
+    bindings.reserve(usm_buffers_.size());
+    for (auto i = 0u; i < usm_buffers_.size(); ++i) {
       bindings.emplace_back(i, // Binding index
                             vk::DescriptorType::eStorageBuffer,
                             1, // Descriptor count
@@ -154,10 +152,7 @@ protected:
     descriptor_set_ =
         device_ptr_->allocateDescriptorSets(set_alloc_info).front();
 
-    // TODO: -------------------- tmp --------------
-    // std::array tmp_buffer{Buffer(device_ptr_, 1024), Buffer(device_ptr_,
-    // 1024)};
-
+    // Update descriptor set
     for (auto i = 0u; i < usm_buffers_.size(); ++i) {
       std::vector<vk::WriteDescriptorSet> compute_write_descriptor_sets;
       compute_write_descriptor_sets.reserve(usm_buffers_.size());
@@ -246,6 +241,8 @@ protected:
   }
 
 private:
+  std::string spirv_filename_;
+
   vk::Pipeline pipeline_;
   vk::PipelineCache pipeline_cache_;
   vk::PipelineLayout pipeline_layout_;
