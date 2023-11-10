@@ -55,7 +55,7 @@ public:
 
     if (manage_resources_ && !yx_buffers_.empty()) {
       spdlog::debug("ComputeEngine::destroy() explicitly freeing buffers");
-      for (auto& weak_buffer : yx_buffers_) {
+      for (auto &weak_buffer : yx_buffers_) {
         if (const auto buffer = weak_buffer.lock()) {
           buffer->destroy();
         }

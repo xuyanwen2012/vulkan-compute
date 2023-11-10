@@ -13,9 +13,9 @@ namespace core {
   std::array<vk::SpecializationMapEntry, 3> spec_const;
   for (int i = 0; i < 3; ++i) {
     spec_const[i] = vk::SpecializationMapEntry()
-                         .setConstantID(i)
-                         .setOffset(i * sizeof(uint32_t))
-                         .setSize(sizeof(uint32_t));
+                        .setConstantID(i)
+                        .setOffset(i * sizeof(uint32_t))
+                        .setSize(sizeof(uint32_t));
   }
   return spec_const;
 }
@@ -112,11 +112,9 @@ public:
     workgroup_ = workgroup;
   }
 
-  template <typename T>
-  std::vector<T> get_push_constants()
-  {
-    return {static_cast<T*>(push_constants_data_),
-            static_cast<T*>(push_constants_data_) + push_constants_size_};
+  template <typename T> std::vector<T> get_push_constants() {
+    return {static_cast<T *>(push_constants_data_),
+            static_cast<T *>(push_constants_data_) + push_constants_size_};
   }
 
 protected:
@@ -162,13 +160,14 @@ protected:
       vk::DescriptorBufferInfo buf_info =
           usm_buffers_[i]->constructDescriptorBufferInfo();
 
-      compute_write_descriptor_sets.emplace_back(descriptor_set_,
-                                                 i, // Destination binding
-                                                 0, // Destination array element
-                                                 1, // Descriptor count
-                                                 vk::DescriptorType::eStorageBuffer,
-                                                 nullptr, // Descriptor image info
-                                                 &buf_info);
+      compute_write_descriptor_sets.emplace_back(
+          descriptor_set_,
+          i, // Destination binding
+          0, // Destination array element
+          1, // Descriptor count
+          vk::DescriptorType::eStorageBuffer,
+          nullptr, // Descriptor image info
+          &buf_info);
 
       device_ptr_->updateDescriptorSets(compute_write_descriptor_sets, nullptr);
     }
