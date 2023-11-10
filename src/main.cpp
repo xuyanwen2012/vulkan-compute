@@ -1,11 +1,14 @@
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <random>
+#include <vector>
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 
 #include "core/engine.hpp"
+#include "core/tensor.hpp"
 
 namespace core {
 VmaAllocator g_allocator;
@@ -28,7 +31,14 @@ int main(int argc, char **argv) {
       h_data, [&] { return glm::vec4(dis(gen), dis(gen), dis(gen), 0.0f); });
 
   core::ComputeEngine engine{};
-  engine.run(h_data);
+
+  auto algo = engine.algorithm({32, 1, 1}, {1, 1, 1}, {1, 1, 1});
+
+  // algo->set_push_constants(tmp);
+  // algo->set_push_constants(tmp.data(), tmp.size(), sizeof(float));
+  // algo->set_workgroup({32, 1, 1});
+
+  // engine.run(h_data);
 
   const auto output_data =
       reinterpret_cast<const OutputT *>(engine.usm_buffers_[1]->get_data());
@@ -44,6 +54,14 @@ int main(int argc, char **argv) {
 			<< "\t" << std::setw(9) << output_data[i] << std::endl;
     // clang-format on
   }
+
+  std::vector<float> test(100);
+  std::ranges::generate(test, [&] { return dis(gen); });
+
+  // core::Tensor tensor(engine.get_device_ptr(), test.data(), test.size(),
+  //                     sizeof(decltype(test)::value_type));
+
+  // std::cout << "tensor: " << tensor << std::endl;
 
   std::cout << "Done!" << std::endl;
   return EXIT_SUCCESS;

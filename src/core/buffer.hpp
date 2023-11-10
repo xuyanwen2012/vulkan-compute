@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vk_mem_alloc.h>
 #include <utility>
+#include <vk_mem_alloc.h>
 #include <vulkan/vulkan.hpp>
 
 #include "base_engine.hpp"
@@ -67,6 +67,7 @@ public:
   Buffer(const Buffer &) = delete;
 
   ~Buffer() override {
+    std::cout << "[DEBUG] Buffer destructor" << std::endl;
     destroy();
   }
 
@@ -101,13 +102,25 @@ public:
     update(reinterpret_cast<const std::byte *>(&object), sizeof(T), offset);
   }
 
+  // ---------------------------------------------------------------------------
+  // The following functions provides infos for the descriptor set
+  // ---------------------------------------------------------------------------
+
+  // uint32_t memorySize() { return size_ * this->mDataTypeMemorySize; }
+
+  [[nodiscard]] vk::DescriptorBufferInfo constructDescriptorBufferInfo() const {
+    return vk::DescriptorBufferInfo()
+        .setBuffer(get_handle())
+        .setOffset(0)
+        .setRange(size_);
+  }
+
 protected:
-    void destroy() override
-    {
-	    if (get_handle() && allocation_ != VK_NULL_HANDLE) {
-	      vmaDestroyBuffer(g_allocator, get_handle(), allocation_);
-	    }
+  void destroy() override {
+    if (get_handle() && allocation_ != VK_NULL_HANDLE) {
+      vmaDestroyBuffer(g_allocator, get_handle(), allocation_);
     }
+  }
 
 private:
   VmaAllocation allocation_ = VK_NULL_HANDLE;

@@ -26,6 +26,14 @@ public:
   }
 
   ~BaseEngine() {
+    std::cout << "[DEBUG] BaseEngine::~BaseEngine " << std::endl;
+    
+    destory();
+  }
+
+  void destory() {
+    std::cout << "[DEBUG] BaseEngine::destory " << std::endl;
+
     if (g_allocator != VK_NULL_HANDLE) {
       vmaDestroyAllocator(g_allocator);
     }

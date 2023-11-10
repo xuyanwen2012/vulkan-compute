@@ -8,7 +8,7 @@
 #include "algorithm.hpp"
 #include "base_engine.hpp"
 #include "buffer.hpp"
-#include "compute_shader.hpp"
+// #include "compute_shader.hpp"
 
 using InputT = glm::vec4;
 using OutputT = glm::uint;
@@ -33,14 +33,22 @@ struct MyPushConst {
 namespace core {
 class ComputeEngine : public BaseEngine {
 public:
-  ComputeEngine() : algorithm_(get_device_ptr()) {
+  ComputeEngine() {
+    //
+    manage_resources_ = true;
+
     // Tmp
+    // algorithm_ = std::make_unique<Algorithm>(get_device_ptr());
+
+    // algorithms_.push_back(Algorithm(get_device_ptr()));
+
     vkh_device_ = device_.device;
 
     create_sync_object();
+
     create_command_pool();
 
-    algorithm_.rebuild();
+    // algorithm_->rebuild();
 
     // create_descriptor_set_layout();
     // create_descriptor_pool();
@@ -56,14 +64,51 @@ public:
   }
 
   ~ComputeEngine() {
+    std::cout << "[DEBUG] ComputeEngine::~ComputeEngine()" << std::endl;
+    destory();
+  }
+
+  void destory() {
+    // algorithm_.reset();
+
+    // if (this->mManageResources && this->mManagedAlgorithms.size()) {
+    //     KP_LOG_DEBUG("Kompute Manager explicitly freeing algorithms");
+    //     for (const std::weak_ptr<Algorithm>& weakAlgorithm :
+    //          this->mManagedAlgorithms) {
+    //         if (std::shared_ptr<Algorithm> algorithm = weakAlgorithm.lock())
+    //         {
+    //             algorithm->destroy();
+    //         }
+    //     }
+    //     this->mManagedAlgorithms.clear();
+    // }
+
+    if (manage_resources_ && !algorithms_.empty()) {
+      std::cout << "[DEBUG] ComputeEngine::destory() "
+                << "explicitly freeing algorithms" << std::endl;
+      for (const std::weak_ptr<Algorithm> &weak_algorithm : algorithms_) {
+        if (std::shared_ptr<Algorithm> algorithm = weak_algorithm.lock()) {
+          algorithm->destroy();
+        }
+      }
+      algorithms_.clear();
+    }
+
     vkh_device_.destroyFence(immediate_fence_);
     vkh_device_.freeCommandBuffers(command_pool_, immediate_command_buffer_);
     vkh_device_.destroyCommandPool(command_pool_);
+  }
 
-    // vkh_device_.destroyDescriptorSetLayout(descriptor_set_layout_);
-    // vkh_device_.destroyDescriptorPool(descriptor_pool_);
-    // vkh_device_.destroyPipelineLayout(pipeline_layout_);
-    // vkh_device_.destroyPipeline(pipeline_);
+  [[nodiscard]] std::shared_ptr<Algorithm>
+  algorithm(const Workgroup &workgroup = {},
+            const std::vector<uint32_t> &specialization_constants = {},
+            const std::vector<float> &push_consts = {}) {
+    auto algorithm = std::make_shared<Algorithm>(
+        get_device_ptr(), workgroup, specialization_constants, push_consts);
+    if (manage_resources_) {
+      algorithms_.push_back(algorithm);
+    }
+    return algorithm;
   }
 
   void submit_and_wait(const vk::CommandBuffer &command_buffer) const {
@@ -94,10 +139,9 @@ public:
 
     // ------- RECORD COMMAND BUFFER --------
 
-     algorithm_.record_bind_core(immediate_command_buffer_);
+    // algorithm_->record_bind_core(immediate_command_buffer_);
 
-
-     algorithm_.record_dispatch(immediate_command_buffer_);
+    // algorithm_->record_dispatch(immediate_command_buffer_);
 
     // constexpr auto begin_info = vk::CommandBufferBeginInfo().setFlags(
     //     vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
@@ -295,11 +339,15 @@ private:
   // other things are: instance, physical device, device, queue
   // and global VMA allocator
   vk::CommandPool command_pool_;
-
   vk::CommandBuffer immediate_command_buffer_;
   vk::Fence immediate_fence_;
 
-  Algorithm algorithm_;
+  // std::unique_ptr<Algorithm> algorithm_;
+
+  // std::vector<Algorithm> algorithms_;
+  std::vector<std::weak_ptr<Algorithm>> algorithms_;
+
+  // Algorithm algorithm_;
 
   // These are for each compute shader (pipeline)
   // vk::Pipeline pipeline_;
@@ -309,6 +357,9 @@ private:
   // vk::DescriptorPool descriptor_pool_;
   // vk::DescriptorSet descriptor_set_;
   // and module
+
+  // bool mManageResources = false;
+  bool manage_resources_ = false;
 
 public:
   // Warning: use pointer, other wise the buffer's content might be gone
