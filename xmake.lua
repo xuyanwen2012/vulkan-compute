@@ -1,7 +1,11 @@
 set_project("Vulkan Compute")
 
+-- Vulkan related
 add_requires("vk-bootstrap", "vulkan-memory-allocator", "spirv-cross", "glm")
 add_requires("vulkansdk", {system = true})
+
+-- Others
+add_requires("spdlog")
 
 add_rules("mode.debug", "mode.release")
 
@@ -23,9 +27,10 @@ end
 -- end)
 
 target("vulkan-compute")
-set_default(true)
-set_kind("binary")
-add_files("src/*.cpp", "src/core/*.cpp")
-add_headerfiles("src/core/*.hpp")
-add_packages("vk-bootstrap", "vulkan-memory-allocator", "spirv-cross", "glm",
-             "vulkansdk")
+    set_default(true)
+    set_kind("binary")
+    add_files("src/*.cpp", "src/core/*.cpp")
+    add_headerfiles("src/core/*.hpp")
+    add_packages("vk-bootstrap", "vulkan-memory-allocator", "spirv-cross", "glm",
+                "vulkansdk")
+    add_packages("spdlog")

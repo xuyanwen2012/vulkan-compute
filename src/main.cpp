@@ -9,7 +9,7 @@
 
 #include "core/engine.hpp"
 
-#include "core/yx_algorithm.hpp"
+#include "spdlog/spdlog.h"
 
 namespace core {
 VmaAllocator g_allocator;
@@ -21,6 +21,13 @@ VmaAllocator g_allocator;
 }
 
 int main(int argc, char **argv) {
+
+#if defined(NDEBUG)
+  spdlog::set_level(spdlog::level::off);
+#else
+  spdlog::set_level(spdlog::level::trace);
+#endif
+
   constexpr auto min_coord = 0.0f;
   constexpr auto max_coord = 1024.0f;
   constexpr auto range = max_coord - min_coord;

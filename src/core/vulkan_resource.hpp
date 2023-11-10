@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <spdlog/spdlog.h>
 #include <vulkan/vulkan.hpp>
 
 namespace core {

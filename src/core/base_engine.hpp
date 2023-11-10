@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <memory>
+#include <spdlog/spdlog.h>
 #include <vulkan/vulkan.hpp>
 
 #include "VkBootstrap.h"
@@ -26,14 +27,11 @@ public:
   }
 
   ~BaseEngine() {
-    std::cout << "[DEBUG] BaseEngine::~BaseEngine " << std::endl;
-    
+    spdlog::debug("BaseEngine::~BaseEngine");
     destory();
   }
 
   void destory() {
-    std::cout << "[DEBUG] BaseEngine::destory " << std::endl;
-
     if (g_allocator != VK_NULL_HANDLE) {
       vmaDestroyAllocator(g_allocator);
     }
@@ -79,8 +77,8 @@ private:
                 << phys_ret.error().message() << "\n";
       throw std::runtime_error("Failed to select Vulkan Physical Device");
     }
-    std::cout << "selected GPU: " << phys_ret.value().properties.deviceName
-              << '\n';
+
+    spdlog::info("selected GPU: {}", phys_ret.value().properties.deviceName);
 
     // Vulkan logical device creation (3/3)
     vkb::DeviceBuilder device_builder{phys_ret.value()};
@@ -97,8 +95,6 @@ private:
   void get_queues() {
     auto q_ret = device_.get_queue(vkb::QueueType::compute);
     if (!q_ret.has_value()) {
-      std::cout << "failed to get compute queue: " << q_ret.error().message()
-                << "\n";
       throw std::runtime_error("Failed to get compute queue");
     }
     queue_ = q_ret.value();

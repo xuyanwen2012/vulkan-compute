@@ -28,7 +28,7 @@ protected:
     }
   }
 
-  void create_command_pool(){
+  void create_command_pool() {
     //  const auto create_info =
     //     vk::CommandPoolCreateInfo()
     //         .setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer)
@@ -37,7 +37,7 @@ protected:
   }
 
   void create_command_buffer();
-  
+
   void create_timestamp_query_pool(uint32_t totalTimestamps);
 
 private:

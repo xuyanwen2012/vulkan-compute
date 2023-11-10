@@ -1,7 +1,6 @@
 #pragma once
 
 #include "vulkan_resource.hpp"
-#include <iostream>
 
 namespace core {
 
@@ -9,9 +8,12 @@ class YxAlgorithm final : public VulkanResource<vk::ShaderModule> {
 
 public:
   YxAlgorithm(const std::shared_ptr<vk::Device> &device_ptr)
-      : VulkanResource(device_ptr) {}
+      : VulkanResource(device_ptr) {
+    spdlog::debug("YxAlgorithm::YxAlgorithm");
+  }
 
   void destroy() override {
+    spdlog::debug("YxAlgorithm::destroy");
     device_ptr_->destroyShaderModule(handle_);
     device_ptr_->destroyPipeline(pipeline_);
     device_ptr_->destroyPipelineCache(pipeline_cache_);
@@ -22,6 +24,8 @@ public:
 
   template <typename T>
   void set_push_constants(const std::vector<T> &push_constants) {
+    spdlog::debug("YxAlgorithm::set_push_constants", push_constants.size());
+
     assert(!push_constants.empty());
     const uint32_t memory_size = sizeof(decltype(push_constants.back()));
     const uint32_t size = push_constants.size();
@@ -39,7 +43,8 @@ public:
         total_size != previous_total_size) {
 
       // throw std::runtime_error("totalSize != previousTotalSize");
-      std::cout << "[Warning] totalSize != previousTotalSize" << std::endl;
+      // std::cout << "[Warning] totalSize != previousTotalSize" << std::endl;
+      spdlog::warn("totalSize != previousTotalSize");
     }
 
     if (push_constants_data_) {

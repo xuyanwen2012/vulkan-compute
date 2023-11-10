@@ -1,5 +1,6 @@
 #pragma once
 
+#include <spdlog/spdlog.h>
 #include <utility>
 #include <vk_mem_alloc.h>
 #include <vulkan/vulkan.hpp>
@@ -48,15 +49,12 @@ public:
       throw std::runtime_error("Cannot create HPPBuffer");
     }
 
-    if constexpr (true) {
-      std::cout << "alloc_info: " << std::endl;
-      std::cout << "\tsize: " << allocation_info.size << std::endl;
-      std::cout << "\toffset: " << allocation_info.offset << std::endl;
-      std::cout << "\tmemoryType: " << allocation_info.memoryType << std::endl;
-      std::cout << "\tmappedData: " << allocation_info.pMappedData << std::endl;
-      std::cout << "\tdeviceMemory: " << allocation_info.deviceMemory
-                << std::endl;
-    }
+    // log the allocation info
+    spdlog::debug("Buffer::Buffer");
+    spdlog::debug("\tsize: {}", allocation_info.size);
+    spdlog::debug("\toffset: {}", allocation_info.offset);
+    spdlog::debug("\tmemoryType: {}", allocation_info.memoryType);
+    spdlog::debug("\tmappedData: {}", allocation_info.pMappedData);
 
     memory_ = static_cast<vk::DeviceMemory>(allocation_info.deviceMemory);
     if (persistent_) {
@@ -67,7 +65,7 @@ public:
   Buffer(const Buffer &) = delete;
 
   ~Buffer() override {
-    std::cout << "[DEBUG] Buffer destructor" << std::endl;
+    spdlog::debug("Buffer::~Buffer");
     destroy();
   }
 

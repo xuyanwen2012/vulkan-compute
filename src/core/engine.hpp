@@ -65,7 +65,7 @@ public:
   }
 
   ~ComputeEngine() {
-    std::cout << "[DEBUG] ComputeEngine::~ComputeEngine()" << std::endl;
+    spdlog::debug("ComputeEngine::~ComputeEngine");
     destory();
   }
 
@@ -85,8 +85,7 @@ public:
     // }
 
     if (manage_resources_ && !yx_algorithms_.empty()) {
-      std::cout << "[DEBUG] ComputeEngine::destory() "
-                << "explicitly freeing algorithms" << std::endl;
+      spdlog::debug("ComputeEngine::destory() explicitly freeing algorithms");
       for (const std::weak_ptr<YxAlgorithm> &weak_algorithm : yx_algorithms_) {
         if (std::shared_ptr<YxAlgorithm> algorithm = weak_algorithm.lock()) {
           algorithm->destroy();
