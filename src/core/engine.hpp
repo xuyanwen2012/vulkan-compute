@@ -3,13 +3,10 @@
 #include <glm/glm.hpp>
 #include <memory>
 #include <vulkan/vulkan.hpp>
-#include <vulkan/vulkan_core.h>
 
-#include "algorithm.hpp"
 #include "base_engine.hpp"
 #include "buffer.hpp"
 #include "yx_algorithm.hpp"
-// #include "compute_shader.hpp"
 
 using InputT = glm::vec4;
 using OutputT = glm::uint;
@@ -42,14 +39,14 @@ public:
 
   ~ComputeEngine() {
     spdlog::debug("ComputeEngine::~ComputeEngine");
-    destory();
+    destroy();
   }
 
-  void destory() {
+  void destroy() {
     if (manage_resources_ && !yx_algorithms_.empty()) {
-      spdlog::debug("ComputeEngine::destory() explicitly freeing algorithms");
-      for (const std::weak_ptr<YxAlgorithm> &weak_algorithm : yx_algorithms_) {
-        if (std::shared_ptr<YxAlgorithm> algorithm = weak_algorithm.lock()) {
+      spdlog::debug("ComputeEngine::destroy() explicitly freeing algorithms");
+      for (auto &weak_algorithm : yx_algorithms_) {
+        if (const auto algorithm = weak_algorithm.lock()) {
           algorithm->destroy();
         }
       }
@@ -57,9 +54,9 @@ public:
     }
 
     if (manage_resources_ && !yx_buffers_.empty()) {
-      spdlog::debug("ComputeEngine::destory() explicitly freeing buffers");
-      for (const std::weak_ptr<Buffer> &weak_buffer : yx_buffers_) {
-        if (std::shared_ptr<Buffer> buffer = weak_buffer.lock()) {
+      spdlog::debug("ComputeEngine::destroy() explicitly freeing buffers");
+      for (auto& weak_buffer : yx_buffers_) {
+        if (const auto buffer = weak_buffer.lock()) {
           buffer->destroy();
         }
       }

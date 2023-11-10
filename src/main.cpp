@@ -56,14 +56,14 @@ int main(int argc, char **argv) {
   // data.size() * sizeof(float));
 
   std::array<uint32_t, 3> workgroup{32, 1, 1};
-  std::vector<float> push_consts{0, 0, 0, 0};
+  std::vector<float> push_const{0, 0, 0, 0};
 
   // std::vector<std::shared_ptr<core::Buffer>> params {in_buffer, out_buffer};
 
   auto a = engine.yx_buffer(1024);
   auto b = engine.yx_buffer(1024);
   std::vector<std::shared_ptr<core::Buffer>> params{a, b};
-  auto algo = engine.yx_algorithm("morton", params, workgroup, push_consts);
+  auto algo = engine.yx_algorithm("morton", params, workgroup, push_const);
 
   // algo->set_push_constants(h_data);
   // algo->set_workgroup({32, 1, 1});

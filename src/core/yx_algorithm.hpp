@@ -9,15 +9,15 @@ namespace core {
 // For CLSPV generated shader, need to use specialization constants to pass
 // Must need 3 uint32 at constant ID 0, 1, 2
 // I am hard coding the first three specialized entry right now
-[[nodiscard]] constexpr auto clspv_default_spec_consts() {
-  std::array<vk::SpecializationMapEntry, 3> spec_consts;
+[[nodiscard]] constexpr auto clspv_default_spec_const() {
+  std::array<vk::SpecializationMapEntry, 3> spec_const;
   for (int i = 0; i < 3; ++i) {
-    spec_consts[i] = vk::SpecializationMapEntry()
+    spec_const[i] = vk::SpecializationMapEntry()
                          .setConstantID(i)
                          .setOffset(i * sizeof(uint32_t))
                          .setSize(sizeof(uint32_t));
   }
-  return spec_consts;
+  return spec_const;
 }
 
 class YxAlgorithm final : public VulkanResource<vk::ShaderModule> {
@@ -27,15 +27,15 @@ public:
               const std::string_view spirv_filename,
               const std::vector<std::shared_ptr<Buffer>> &buffers = {},
               const std::array<uint32_t, 3> &workgroup = {},
-              const std::vector<float> &pushConstants = {})
+              const std::vector<float> &push_constants = {})
       : VulkanResource(device_ptr), spirv_filename_(spirv_filename),
         usm_buffers_(buffers) {
     if (!buffers.empty()) {
-      spdlog::info("YxAlgorithm ({}) initialising with tensor size: {}",
+      spdlog::info("YxAlgorithm ({}) initializing with tensor size: {}",
                    spirv_filename, buffers.size());
-      rebuild(workgroup, pushConstants);
+      rebuild(workgroup, push_constants);
     } else {
-      spdlog::error("YxAlgorithm ({}) initialising with empty tensor",
+      spdlog::error("YxAlgorithm ({}) initializing with empty tensor",
                     spirv_filename);
     }
   }
@@ -46,19 +46,19 @@ public:
   }
 
   void rebuild(const std::array<uint32_t, 3> &workgroup,
-               const std::vector<float> &pushConstants) {
+               const std::vector<float> &push_constants) {
     spdlog::debug("YxAlgorithm::rebuild, workgroup_x: {}, pushConstants: {}",
-                  workgroup[0], pushConstants.size());
+                  workgroup[0], push_constants.size());
 
-    if (!pushConstants.empty()) {
+    if (!push_constants.empty()) {
       if (push_constants_data_) {
         free(push_constants_data_);
       }
-      const uint32_t memory_size = sizeof(decltype(pushConstants.back()));
-      const uint32_t size = pushConstants.size();
-      uint32_t totalSize = size * memory_size;
-      push_constants_data_ = malloc(totalSize);
-      std::memcpy(push_constants_data_, pushConstants.data(), totalSize);
+      constexpr uint32_t memory_size = sizeof(decltype(push_constants.back()));
+      const uint32_t size = push_constants.size();
+      const uint32_t total_size = size * memory_size;
+      push_constants_data_ = malloc(total_size);
+      std::memcpy(push_constants_data_, push_constants.data(), total_size);
       push_constants_data_type_memory_size_ = memory_size;
       push_constants_size_ = size;
     }
@@ -112,9 +112,11 @@ public:
     workgroup_ = workgroup;
   }
 
-  template <typename T> const std::vector<T> get_push_constants() {
-    return {(T *)push_constants_data_,
-            ((T *)push_constants_data_) + push_constants_size_};
+  template <typename T>
+  std::vector<T> get_push_constants()
+  {
+    return {static_cast<T*>(push_constants_data_),
+            static_cast<T*>(push_constants_data_) + push_constants_size_};
   }
 
 protected:
@@ -160,14 +162,13 @@ protected:
       vk::DescriptorBufferInfo buf_info =
           usm_buffers_[i]->constructDescriptorBufferInfo();
 
-      compute_write_descriptor_sets.push_back(
-          vk::WriteDescriptorSet(descriptor_set_,
-                                 i, // Destination binding
-                                 0, // Destination array element
-                                 1, // Descriptor count
-                                 vk::DescriptorType::eStorageBuffer,
-                                 nullptr, // Descriptor image info
-                                 &buf_info));
+      compute_write_descriptor_sets.emplace_back(descriptor_set_,
+                                                 i, // Destination binding
+                                                 0, // Destination array element
+                                                 1, // Descriptor count
+                                                 vk::DescriptorType::eStorageBuffer,
+                                                 nullptr, // Descriptor image info
+                                                 &buf_info);
 
       device_ptr_->updateDescriptorSets(compute_write_descriptor_sets, nullptr);
     }
@@ -195,7 +196,7 @@ protected:
     pipeline_cache_ = device_ptr_->createPipelineCache(pipeline_cache_info);
 
     // Pipeline itself (3/3)
-    constexpr auto spec_map = clspv_default_spec_consts();
+    const auto spec_map = clspv_default_spec_const();
     const std::array spec_map_content{workgroup_[0], workgroup_[1],
                                       workgroup_[2]};
 

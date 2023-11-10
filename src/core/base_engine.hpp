@@ -28,10 +28,11 @@ public:
 
   ~BaseEngine() {
     spdlog::debug("BaseEngine::~BaseEngine");
-    destory();
+    destroy();
   }
 
-  void destory() {
+  void destroy() const
+  {
     if (g_allocator != VK_NULL_HANDLE) {
       vmaDestroyAllocator(g_allocator);
     }
