@@ -1,6 +1,8 @@
+#include "core/buffer.hpp"
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
+#include <memory>
 #include <random>
 #include <vector>
 
@@ -40,9 +42,44 @@ int main(int argc, char **argv) {
 
   core::ComputeEngine engine{};
 
-  auto algo = engine.yx_algorithm();
-  algo->set_push_constants(h_data);
-  algo->set_workgroup({32, 1, 1});
+  // std::vector yx_data(100, 0.0f);
+
+  //  auto tensorInA
+
+  std::vector<float> data(100);
+  std::ranges::generate(data, [&] { return dis(gen); });
+
+  // TODO: engine from
+  // Note: currently the buffer size is the N*sizeof(T)
+  // core::Buffer in_buffer(engine.get_device_ptr(), data.size() *
+  // sizeof(float)); core::Buffer out_buffer(engine.get_device_ptr(),
+  // data.size() * sizeof(float));
+
+  std::array<uint32_t, 3> workgroup{32, 1, 1};
+  std::vector<float> push_consts{0, 0, 0, 0};
+
+  // std::vector<std::shared_ptr<core::Buffer>> params {in_buffer, out_buffer};
+  std::vector<std::shared_ptr<core::Buffer>> params{};
+
+  // std::shared_ptr<core::Buffer> a{
+  //     new core::Buffer(engine.get_device_ptr(), data.size() *
+  //     sizeof(float))};
+
+  // std::shared_ptr<core::Buffer> b{
+  //     new core::Buffer(engine.get_device_ptr(), data.size() *
+  //     sizeof(float))};
+
+  // auto b = std::make_shared<core::Buffer>(out_buffer);
+
+  // params.push_back(std::make_shared<core::Buffer>(in_buffer));
+  // params.push_back(std::make_shared<core::Buffer>(out_buffer));
+
+  auto a = engine.yx_buffer(1024);
+  auto b = engine.yx_buffer(1024);
+  auto algo = engine.yx_algorithm({a, b}, workgroup, push_consts);
+
+  // algo->set_push_constants(h_data);
+  // algo->set_workgroup({32, 1, 1});
 
   // auto algo = engine.algorithm({32, 1, 1}, {1, 1, 1}, {1, 1, 1});
   // algo->set_push_constants(tmp);
@@ -53,23 +90,23 @@ int main(int argc, char **argv) {
 
   // engine.run(h_data);
 
-  const auto output_data =
-      reinterpret_cast<const OutputT *>(engine.usm_buffers_[1]->get_data());
+  // const auto output_data =
+  //     reinterpret_cast<const OutputT *>(engine.usm_buffers_[1]->get_data());
 
-  std::cout << "Output:" << std::endl;
-  for (size_t i = 0; i < 10; ++i) {
-    // clang-format off
-		std::cout << "[" << i << "] "
-			<< std::fixed << std::setprecision(3) << "("
-			<< std::setw(8) << h_data[i].x << ", "
-			<< std::setw(8) << h_data[i].y << ", "
-			<< std::setw(8) << h_data[i].z << ")"
-			<< "\t" << std::setw(9) << output_data[i] << std::endl;
-    // clang-format on
-  }
+  // std::cout << "Output:" << std::endl;
+  // for (size_t i = 0; i < 10; ++i) {
+  //   // clang-format off
+  // 	std::cout << "[" << i << "] "
+  // 		<< std::fixed << std::setprecision(3) << "("
+  // 		<< std::setw(8) << h_data[i].x << ", "
+  // 		<< std::setw(8) << h_data[i].y << ", "
+  // 		<< std::setw(8) << h_data[i].z << ")"
+  // 		<< "\t" << std::setw(9) << output_data[i] << std::endl;
+  //   // clang-format on
+  // }
 
-  std::vector<float> test(100);
-  std::ranges::generate(test, [&] { return dis(gen); });
+  // std::vector<float> test(100);
+  // std::ranges::generate(test, [&] { return dis(gen); });
 
   // core::Tensor tensor(engine.get_device_ptr(), test.data(), test.size(),
   //                     sizeof(decltype(test)::value_type));

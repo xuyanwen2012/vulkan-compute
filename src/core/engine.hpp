@@ -55,10 +55,10 @@ public:
     // create_descriptor_pool();
 
     // Tmp
-    usm_buffers_.emplace_back(std::make_shared<Buffer>(
-        get_device_ptr(), InputSize() * sizeof(InputT)));
-    usm_buffers_.emplace_back(std::make_shared<Buffer>(
-        get_device_ptr(), InputSize() * sizeof(OutputT)));
+    // usm_buffers_.emplace_back(std::make_shared<Buffer>(
+    //     get_device_ptr(), InputSize() * sizeof(InputT)));
+    // usm_buffers_.emplace_back(std::make_shared<Buffer>(
+    //     get_device_ptr(), InputSize() * sizeof(OutputT)));
 
     // create_descriptor_set();
     // create_compute_pipeline();
@@ -94,6 +94,16 @@ public:
       yx_algorithms_.clear();
     }
 
+    if (manage_resources_ && !yx_buffers_.empty()) {
+      spdlog::debug("ComputeEngine::destory() explicitly freeing buffers");
+      for (const std::weak_ptr<Buffer> &weak_buffer : yx_buffers_) {
+        if (std::shared_ptr<Buffer> buffer = weak_buffer.lock()) {
+          buffer->destroy();
+        }
+      }
+      yx_buffers_.clear();
+    }
+
     vkh_device_.destroyFence(immediate_fence_);
     vkh_device_.freeCommandBuffers(command_pool_, immediate_command_buffer_);
     vkh_device_.destroyCommandPool(command_pool_);
@@ -111,12 +121,24 @@ public:
   //   return algorithm;
   // }
 
-  [[nodiscard]] std::shared_ptr<YxAlgorithm> yx_algorithm() {
-    auto algorithm = std::make_shared<YxAlgorithm>(get_device_ptr());
+  [[nodiscard]] std::shared_ptr<Buffer> yx_buffer(vk::DeviceSize size) {
+    auto buf = std::make_shared<Buffer>(get_device_ptr(), size);
     if (manage_resources_) {
-      yx_algorithms_.push_back(algorithm);
+      yx_buffers_.push_back(buf);
     }
-    return algorithm;
+    return buf;
+  }
+
+  [[nodiscard]] std::shared_ptr<YxAlgorithm>
+  yx_algorithm(const std::vector<std::shared_ptr<Buffer>> &buffers,
+               const std::array<uint32_t, 3> &workgroup,
+               const std::vector<float> &pushConstants) {
+    auto algo = std::make_shared<YxAlgorithm>(get_device_ptr(), buffers,
+                                              workgroup, pushConstants);
+    if (manage_resources_) {
+      yx_algorithms_.push_back(algo);
+    }
+    return algo;
   }
 
   void submit_and_wait(const vk::CommandBuffer &command_buffer) const {
@@ -133,7 +155,7 @@ public:
 
   void run(const std::vector<InputT> &input_data) {
     // write_data_to_buffer
-    usm_buffers_[0]->update(input_data.data(), sizeof(InputT) * InputSize());
+    // usm_buffers_[0]->update(input_data.data(), sizeof(InputT) * InputSize());
 
     // execute_sync
     const auto cmd_buf_alloc_info =
@@ -355,6 +377,7 @@ private:
   // std::vector<Algorithm> algorithms_;
   // std::vector<std::weak_ptr<Algorithm>> algorithms_;
   std::vector<std::weak_ptr<YxAlgorithm>> yx_algorithms_;
+  std::vector<std::weak_ptr<Buffer>> yx_buffers_;
 
   // Algorithm algorithm_;
 
@@ -367,12 +390,11 @@ private:
   // vk::DescriptorSet descriptor_set_;
   // and module
 
-  // bool mManageResources = false;
   bool manage_resources_ = false;
 
 public:
   // Warning: use pointer, other wise the buffer's content might be gone
-  std::vector<std::shared_ptr<Buffer>> usm_buffers_;
+  // std::vector<std::shared_ptr<Buffer>> usm_buffers_;
 
   // std::shared_ptr<DescriptorAllocator> m_descriptorAllocator;
   // std::shared_ptr<DescriptorLayoutCache> m_descriptorLayoutCache;

@@ -113,7 +113,7 @@ public:
         .setRange(size_);
   }
 
-protected:
+public:
   void destroy() override {
     if (get_handle() && allocation_ != VK_NULL_HANDLE) {
       vmaDestroyBuffer(g_allocator, get_handle(), allocation_);
