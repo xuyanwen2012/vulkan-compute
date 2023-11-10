@@ -8,6 +8,7 @@
 #include "algorithm.hpp"
 #include "base_engine.hpp"
 #include "buffer.hpp"
+#include "yx_algorithm.hpp"
 // #include "compute_shader.hpp"
 
 using InputT = glm::vec4;
@@ -83,15 +84,15 @@ public:
     //     this->mManagedAlgorithms.clear();
     // }
 
-    if (manage_resources_ && !algorithms_.empty()) {
+    if (manage_resources_ && !yx_algorithms_.empty()) {
       std::cout << "[DEBUG] ComputeEngine::destory() "
                 << "explicitly freeing algorithms" << std::endl;
-      for (const std::weak_ptr<Algorithm> &weak_algorithm : algorithms_) {
-        if (std::shared_ptr<Algorithm> algorithm = weak_algorithm.lock()) {
+      for (const std::weak_ptr<YxAlgorithm> &weak_algorithm : yx_algorithms_) {
+        if (std::shared_ptr<YxAlgorithm> algorithm = weak_algorithm.lock()) {
           algorithm->destroy();
         }
       }
-      algorithms_.clear();
+      yx_algorithms_.clear();
     }
 
     vkh_device_.destroyFence(immediate_fence_);
@@ -99,14 +100,22 @@ public:
     vkh_device_.destroyCommandPool(command_pool_);
   }
 
-  [[nodiscard]] std::shared_ptr<Algorithm>
-  algorithm(const Workgroup &workgroup = {},
-            const std::vector<uint32_t> &specialization_constants = {},
-            const std::vector<float> &push_consts = {}) {
-    auto algorithm = std::make_shared<Algorithm>(
-        get_device_ptr(), workgroup, specialization_constants, push_consts);
+  // [[nodiscard]] std::shared_ptr<Algorithm>
+  // algorithm(const Workgroup &workgroup = {},
+  //           const std::vector<uint32_t> &specialization_constants = {},
+  //           const std::vector<float> &push_consts = {}) {
+  //   auto algorithm = std::make_shared<Algorithm>(
+  //       get_device_ptr(), workgroup, specialization_constants, push_consts);
+  //   if (manage_resources_) {
+  //     algorithms_.push_back(algorithm);
+  //   }
+  //   return algorithm;
+  // }
+
+  [[nodiscard]] std::shared_ptr<YxAlgorithm> yx_algorithm() {
+    auto algorithm = std::make_shared<YxAlgorithm>(get_device_ptr());
     if (manage_resources_) {
-      algorithms_.push_back(algorithm);
+      yx_algorithms_.push_back(algorithm);
     }
     return algorithm;
   }
@@ -345,7 +354,8 @@ private:
   // std::unique_ptr<Algorithm> algorithm_;
 
   // std::vector<Algorithm> algorithms_;
-  std::vector<std::weak_ptr<Algorithm>> algorithms_;
+  // std::vector<std::weak_ptr<Algorithm>> algorithms_;
+  std::vector<std::weak_ptr<YxAlgorithm>> yx_algorithms_;
 
   // Algorithm algorithm_;
 

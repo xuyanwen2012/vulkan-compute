@@ -8,7 +8,8 @@
 #include <glm/glm.hpp>
 
 #include "core/engine.hpp"
-#include "core/tensor.hpp"
+
+#include "core/yx_algorithm.hpp"
 
 namespace core {
 VmaAllocator g_allocator;
@@ -32,11 +33,16 @@ int main(int argc, char **argv) {
 
   core::ComputeEngine engine{};
 
-  auto algo = engine.algorithm({32, 1, 1}, {1, 1, 1}, {1, 1, 1});
+  auto algo = engine.yx_algorithm();
+  algo->set_push_constants(h_data);
+  algo->set_workgroup({32, 1, 1});
 
+  // auto algo = engine.algorithm({32, 1, 1}, {1, 1, 1}, {1, 1, 1});
   // algo->set_push_constants(tmp);
   // algo->set_push_constants(tmp.data(), tmp.size(), sizeof(float));
   // algo->set_workgroup({32, 1, 1});
+
+  // auto algo =
 
   // engine.run(h_data);
 
