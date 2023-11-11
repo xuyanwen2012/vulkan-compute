@@ -20,20 +20,22 @@ namespace core {
   return spec_const;
 }
 
+using WorkGroup = std::array<uint32_t, 3>;
+
 class Algorithm final : public VulkanResource<vk::ShaderModule> {
 
 public:
   Algorithm(const std::shared_ptr<vk::Device> &device_ptr,
             const std::string_view spirv_filename,
             const std::vector<std::shared_ptr<Buffer>> &buffers = {},
-            const std::array<uint32_t, 3> &workgroup = {},
+            const WorkGroup &workgroup_size = {},
             const std::vector<float> &push_constants = {})
       : VulkanResource(device_ptr), spirv_filename_(spirv_filename),
         usm_buffers_(buffers) {
     if (!buffers.empty()) {
       spdlog::info("YxAlgorithm ({}) initializing with tensor size: {}",
                    spirv_filename, buffers.size());
-      rebuild(workgroup, push_constants);
+      rebuild(workgroup_size, push_constants);
     } else {
       spdlog::error("YxAlgorithm ({}) initializing with empty tensor",
                     spirv_filename);
@@ -45,10 +47,10 @@ public:
     destroy();
   }
 
-  void rebuild(const std::array<uint32_t, 3> &workgroup,
+  void rebuild(const WorkGroup &workgroup_size,
                const std::vector<float> &push_constants) {
     spdlog::debug("YxAlgorithm::rebuild, workgroup_x: {}, pushConstants: {}",
-                  workgroup[0], push_constants.size());
+                  workgroup_size[0], push_constants.size());
 
     if (!push_constants.empty()) {
       if (push_constants_data_) {
@@ -63,7 +65,7 @@ public:
       push_constants_size_ = size;
     }
 
-    set_workgroup(workgroup);
+    set_workgroup_size(workgroup_size);
 
     create_shader_module();
     create_parameters();
@@ -108,8 +110,8 @@ public:
     push_constants_size_ = size;
   }
 
-  void set_workgroup(const std::array<uint32_t, 3> &workgroup) {
-    workgroup_ = workgroup;
+  void set_workgroup_size(const WorkGroup &workgroup_size) {
+    workgroup_size_ = workgroup_size;
   }
 
   template <typename T> std::vector<T> get_push_constants() {
@@ -135,8 +137,14 @@ public:
   }
 
   void record_dispatch(const vk::CommandBuffer &cmd_buf) {
+    // spdlog::debug("YxAlgorithm::record_dispatch, workgroup_x: {}",
+    // workgroup_[0]);
+    // cmd_buf.dispatch(workgroup_[0], workgroup_[1], workgroup_[2]);
 
-    cmd_buf.dispatch(workgroup_[0], workgroup_[1], workgroup_[2]);
+    // spdlog
+    // TODO: decide number of blocks
+    // Need input size
+    cmd_buf.dispatch(2, 1, 1);
   }
 
 protected:
@@ -220,8 +228,8 @@ protected:
     const auto spec_map = clspv_default_spec_const();
 
     // I think this workgroup is telling the shader how many blocks to run?
-    const std::array spec_map_content{workgroup_[0], workgroup_[1],
-                                      workgroup_[2]};
+    const std::array spec_map_content{workgroup_size_[0], workgroup_size_[1],
+                                      workgroup_size_[2]};
 
     const auto spec_info =
         vk::SpecializationInfo()
@@ -274,7 +282,8 @@ private:
   vk::DescriptorPool descriptor_pool_;
   vk::DescriptorSet descriptor_set_;
 
-  std::array<uint32_t, 3> workgroup_;
+  // In CUDA terms, this is the number threads per block
+  WorkGroup workgroup_size_;
 
   std::vector<std::shared_ptr<Buffer>> usm_buffers_;
 

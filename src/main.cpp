@@ -10,7 +10,7 @@
 
 #include "core/buffer.hpp"
 #include "core/engine.hpp"
-#include "core/sequence.hpp"
+// #include "core/sequence.hpp"
 
 #include "spdlog/spdlog.h"
 
@@ -56,11 +56,11 @@ int main(int argc, char **argv) {
 
   // I still want to know what workgroup means
   // std::array<uint32_t, 3> workgroup{core::num_blocks(n, 256), 1, 1};
-  std::array<uint32_t, 3> workgroup{32, 1, 1};
-  
+  core::WorkGroup workgroup_size{32, 1, 1};
+
   std::vector<float> push_const{0, 0, 0, 0, n};
   auto algo =
-      engine.yx_algorithm("float_doubler", params, workgroup, push_const);
+      engine.yx_algorithm("float_doubler", params, workgroup_size, push_const);
 
   auto seq = engine.yx_sequence();
   seq->record(*algo);
