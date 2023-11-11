@@ -4,10 +4,10 @@
 #include <memory>
 #include <vulkan/vulkan.hpp>
 
+#include "algorithm.hpp"
 #include "base_engine.hpp"
 #include "buffer.hpp"
 #include "sequence.hpp"
-#include "yx_algorithm.hpp"
 
 // using InputT = glm::vec4;
 // using OutputT = glm::uint;
@@ -32,11 +32,7 @@
 namespace core {
 class ComputeEngine : public BaseEngine {
 public:
-  ComputeEngine() {
-    vkh_device_ = device_.device;
-    create_sync_object();
-    create_command_pool();
-  }
+  ComputeEngine() : vkh_device_(device_.device) {}
 
   ~ComputeEngine() {
     spdlog::debug("ComputeEngine::~ComputeEngine");
@@ -44,45 +40,41 @@ public:
   }
 
   void destroy() {
-    if (manage_resources_ && !yx_algorithms_.empty()) {
+    if (manage_resources_ && !algorithms_.empty()) {
       spdlog::debug("ComputeEngine::destroy() explicitly freeing algorithms");
-      for (auto &weak_algorithm : yx_algorithms_) {
+      for (auto &weak_algorithm : algorithms_) {
         if (const auto algorithm = weak_algorithm.lock()) {
           algorithm->destroy();
         }
       }
-      yx_algorithms_.clear();
+      algorithms_.clear();
     }
 
-    if (manage_resources_ && !yx_buffers_.empty()) {
+    if (manage_resources_ && !buffers_.empty()) {
       spdlog::debug("ComputeEngine::destroy() explicitly freeing buffers");
-      for (auto &weak_buffer : yx_buffers_) {
+      for (auto &weak_buffer : buffers_) {
         if (const auto buffer = weak_buffer.lock()) {
           buffer->destroy();
         }
       }
-      yx_buffers_.clear();
+      buffers_.clear();
     }
 
-    if (manage_resources_ && !yx_sequence_.empty()) {
+    if (manage_resources_ && !sequence_.empty()) {
       spdlog::debug("ComputeEngine::destroy() explicitly freeing sequences");
-      for (auto &weak_sequence : yx_sequence_) {
+      for (auto &weak_sequence : sequence_) {
         if (const auto sequence = weak_sequence.lock()) {
           sequence->destroy();
         }
       }
-      yx_sequence_.clear();
+      sequence_.clear();
     }
-
-    vkh_device_.destroyFence(immediate_fence_);
-    vkh_device_.freeCommandBuffers(command_pool_, immediate_command_buffer_);
-    vkh_device_.destroyCommandPool(command_pool_);
   }
 
   [[nodiscard]] std::shared_ptr<Buffer> yx_buffer(vk::DeviceSize size) {
     auto buf = std::make_shared<Buffer>(get_device_ptr(), size);
     if (manage_resources_) {
-      yx_buffers_.push_back(buf);
+      buffers_.push_back(buf);
     }
     return buf;
   }
@@ -90,32 +82,33 @@ public:
   [[nodiscard]] std::shared_ptr<Sequence> yx_sequence() {
     auto seq = std::make_shared<Sequence>(get_device_ptr(), device_, queue_);
     if (manage_resources_) {
-      yx_sequence_.push_back(seq);
+      sequence_.push_back(seq);
     }
     return seq;
   }
 
   template <typename... Args>
-  [[nodiscard]] std::shared_ptr<YxAlgorithm> yx_algorithm(Args &&...args) {
-    auto algo = std::make_shared<YxAlgorithm>(get_device_ptr(),
-                                              std::forward<Args>(args)...);
+  [[nodiscard]] std::shared_ptr<Algorithm> yx_algorithm(Args &&...args) {
+    auto algo = std::make_shared<Algorithm>(get_device_ptr(),
+                                            std::forward<Args>(args)...);
     if (manage_resources_) {
-      yx_algorithms_.push_back(algo);
+      algorithms_.push_back(algo);
     }
     return algo;
   }
 
-  void submit_and_wait(const vk::CommandBuffer &command_buffer) const {
-    const auto submit_info = vk::SubmitInfo().setCommandBuffers(command_buffer);
+  // void submit_and_wait(const vk::CommandBuffer &command_buffer) const {
+  //   const auto submit_info =
+  //   vk::SubmitInfo().setCommandBuffers(command_buffer);
 
-    queue_.submit(submit_info, immediate_fence_);
+  //   queue_.submit(submit_info, immediate_fence_);
 
-    // wait
-    const auto wait_result =
-        vkh_device_.waitForFences(immediate_fence_, false, UINT64_MAX);
-    assert(wait_result == vk::Result::eSuccess);
-    vkh_device_.resetFences(immediate_fence_);
-  }
+  //   // wait
+  //   const auto wait_result =
+  //       vkh_device_.waitForFences(immediate_fence_, false, UINT64_MAX);
+  //   assert(wait_result == vk::Result::eSuccess);
+  //   vkh_device_.resetFences(immediate_fence_);
+  // }
 
   // void run(const std::vector<InputT> &input_data) {
   //   // execute_sync
@@ -167,46 +160,42 @@ public:
   // }
 
 protected:
-  void create_sync_object() {
-    immediate_fence_ = vkh_device_.createFence(vk::FenceCreateInfo());
-  }
+  // void create_sync_object() {
+  //   immediate_fence_ = vkh_device_.createFence(vk::FenceCreateInfo());
+  // }
 
-  void create_command_pool() {
-    const auto create_info =
-        vk::CommandPoolCreateInfo()
-            .setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer)
-            .setQueueFamilyIndex(
-                device_.get_queue_index(vkb::QueueType::compute).value());
+  // void create_command_pool() {
+  //   const auto create_info =
+  //       vk::CommandPoolCreateInfo()
+  //           .setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer)
+  //           .setQueueFamilyIndex(
+  //               device_.get_queue_index(vkb::QueueType::compute).value());
 
-    command_pool_ = vkh_device_.createCommandPool(create_info);
+  //   command_pool_ = vkh_device_.createCommandPool(create_info);
 
-    const auto command_buffer_allocate_info =
-        vk::CommandBufferAllocateInfo()
-            .setCommandBufferCount(1)
-            .setLevel(vk::CommandBufferLevel::ePrimary)
-            .setCommandPool(command_pool_);
+  //   const auto command_buffer_allocate_info =
+  //       vk::CommandBufferAllocateInfo()
+  //           .setCommandBufferCount(1)
+  //           .setLevel(vk::CommandBufferLevel::ePrimary)
+  //           .setCommandPool(command_pool_);
 
-    immediate_command_buffer_ =
-        vkh_device_.allocateCommandBuffers(command_buffer_allocate_info)
-            .front();
-  }
+  //   immediate_command_buffer_ =
+  //       vkh_device_.allocateCommandBuffers(command_buffer_allocate_info)
+  //           .front();
+  // }
 
 private:
   vk::Device vkh_device_;
 
-  vk::CommandPool command_pool_;
-  vk::CommandBuffer immediate_command_buffer_;
-  vk::Fence immediate_fence_;
+  // vk::CommandPool command_pool_;
+  // vk::CommandBuffer immediate_command_buffer_;
+  // vk::Fence immediate_fence_;
 
-  std::vector<std::weak_ptr<YxAlgorithm>> yx_algorithms_;
-  std::vector<std::weak_ptr<Buffer>> yx_buffers_;
-  std::vector<std::weak_ptr<Sequence>> yx_sequence_;
+  std::vector<std::weak_ptr<Algorithm>> algorithms_;
+  std::vector<std::weak_ptr<Buffer>> buffers_;
+  std::vector<std::weak_ptr<Sequence>> sequence_;
 
   // Should the engine manage the above resources?
   bool manage_resources_ = true;
-
-public:
-  // std::shared_ptr<DescriptorAllocator> m_descriptorAllocator;
-  // std::shared_ptr<DescriptorLayoutCache> m_descriptorLayoutCache;
 };
 } // namespace core

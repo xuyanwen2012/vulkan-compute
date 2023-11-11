@@ -7,9 +7,9 @@
 namespace core {
 
 /**
- * @brief This abstract class provides a pointer to the device, so each Vulkan
- * Components that inherits from this class can access the device. Need to pass
- * in a  shared_ptr<vk::Device> to the constructor.
+ * @brief This abstract class provides a pointer to the vk::device, so each
+ * Vulkan Components that inherits from this class can access the device. Need
+ * to pass in a shared_ptr<vk::Device> to the constructor.
  *
  * @tparam HandleT The Vulkan handle type (e.g., vk::Buffer, vk::Image, etc.)
  */

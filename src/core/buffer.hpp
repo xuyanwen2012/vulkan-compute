@@ -13,11 +13,17 @@ class Buffer;
 
 using BufferReference = std::reference_wrapper<const Buffer>;
 
+/**
+ * @brief Buffer class is an abstraction of data, in the sense of a block of
+ * memory that will be processes by the GPU. It is a warpper of Vulkan buffer
+ * managed by Vulkan Memory Allocator (VMA).
+ *
+ * I provide some default flags for the buffer usage and memory usage. I wanted
+ * to use the unified shared memory (USM), for intergrated GPUs. The data is
+ * shared between CPU and GPU.
+ */
 class Buffer final : public VulkanResource<vk::Buffer> {
 public:
-  // I provide some default flags for the buffer usage
-  // For my purpose, I need to use the buffer as a storage buffer
-  // And I want to use the unified shared memory
   explicit Buffer(
       std::shared_ptr<vk::Device> device_ptr, const vk::DeviceSize size,
       const vk::BufferUsageFlags buffer_usage =
@@ -101,9 +107,15 @@ public:
   //   update(reinterpret_cast<const std::byte *>(&object), sizeof(T), offset);
   // }
 
-  void tmp_write_data(const void *data, const size_t size, const size_t offset = 0){
+  void tmp_write_data(const void *data, const size_t size,
+                      const size_t offset = 0) {
     spdlog::info("Writting {} bytes to buffer", size);
     std::memcpy(mapped_data_ + offset, data, size);
+  }
+
+  void tmp_fill_zero(const size_t size, const size_t offset = 0) {
+    spdlog::info("Filling zeros {} bytes to buffer", size);
+    std::memset(mapped_data_ + offset, 0, size);
   }
 
   // ---------------------------------------------------------------------------
@@ -112,7 +124,8 @@ public:
 
   // uint32_t memorySize() { return size_ * this->mDataTypeMemorySize; }
 
-  [[nodiscard]] vk::DescriptorBufferInfo constructDescriptorBufferInfo() const {
+  [[nodiscard]] const vk::DescriptorBufferInfo
+  construct_descriptor_buffer_info() const {
     return vk::DescriptorBufferInfo()
         .setBuffer(get_handle())
         .setOffset(0)
@@ -132,7 +145,6 @@ private:
   vk::DeviceSize size_ = 0;
   std::byte *mapped_data_ = nullptr;
 
-  bool persistent_ = true;
-  bool mapped_ = true;
+  const bool persistent_ = true;
 };
 } // namespace core

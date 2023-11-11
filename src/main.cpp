@@ -1,6 +1,5 @@
-#include "core/buffer.hpp"
+
 #include <algorithm>
-#include <iomanip>
 #include <iostream>
 #include <memory>
 #include <random>
@@ -9,7 +8,9 @@
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 
+#include "core/buffer.hpp"
 #include "core/engine.hpp"
+#include "core/sequence.hpp"
 
 #include "spdlog/spdlog.h"
 
@@ -36,32 +37,28 @@ int main(int argc, char **argv) {
   std::default_random_engine gen(114514); // NOLINT(cert-msc51-cpp)
   std::uniform_real_distribution dis(min_coord, range);
 
-  // std::vector<InputT> h_data(InputSize());
-  // std::ranges::generate(
-  //     h_data, [&] { return glm::vec4(dis(gen), dis(gen), dis(gen), 0.0f); });
-
-  core::ComputeEngine engine{};
-
-  // std::vector yx_data(100, 0.0f);
-
-  //  auto tensorInA
-
   constexpr auto n = 1024;
-
   std::vector<float> in_data(n);
   std::ranges::generate(in_data, [&] { return dis(gen); });
 
-  // std::array<uint32_t, 3> workgroup{32, 1, 1};
-  std::array<uint32_t, 3> workgroup{32, 1, 1};
-  std::vector<float> push_const{0, 0, 0, 0, n};
+  // Computation start here
+  core::ComputeEngine engine{};
 
   auto in_buf = engine.yx_buffer(n);
   auto out_but = engine.yx_buffer(n);
 
-  in_buf->tmp_write_data((void *)in_data.data(),
+  in_buf->tmp_write_data(reinterpret_cast<void *>(in_data.data()),
                          in_data.size() * sizeof(float));
 
+  out_but->tmp_fill_zero(in_data.size() * sizeof(float));
+
   std::vector<std::shared_ptr<core::Buffer>> params{in_buf, out_but};
+
+  // I still want to know what workgroup means
+  // std::array<uint32_t, 3> workgroup{core::num_blocks(n, 256), 1, 1};
+  std::array<uint32_t, 3> workgroup{32, 1, 1};
+  
+  std::vector<float> push_const{0, 0, 0, 0, n};
   auto algo =
       engine.yx_algorithm("float_doubler", params, workgroup, push_const);
 
@@ -71,47 +68,9 @@ int main(int argc, char **argv) {
   seq->sync();
 
   auto o = reinterpret_cast<const float *>(out_but->get_data());
-  for (int i = 0; i < 256; ++i) {
+  for (int i = 0; i < n; ++i) {
     std::cout << i << ":\t" << in_data[i] << "\t-\t" << o[i] << std::endl;
   }
-
-  // algo->record_bind_core(seq.command_buff_);
-
-  // algo->set_push_constants(h_data);
-  // algo->set_workgroup({32, 1, 1});
-
-  // auto algo = engine.algorithm({32, 1, 1}, {1, 1, 1}, {1, 1, 1});
-  // algo->set_push_constants(tmp);
-  // algo->set_push_constants(tmp.data(), tmp.size(), sizeof(float));
-  // algo->set_workgroup({32, 1, 1});
-
-  // auto algo =
-
-  // engine.run(h_data);
-
-  // const auto output_data =
-  //     reinterpret_cast<const OutputT
-  //     *>(engine.usm_buffers_[1]->get_data());
-
-  // std::cout << "Output:" << std::endl;
-  // for (size_t i = 0; i < 10; ++i) {
-  //   // clang-format off
-  // 	std::cout << "[" << i << "] "
-  // 		<< std::fixed << std::setprecision(3) << "("
-  // 		<< std::setw(8) << h_data[i].x << ", "
-  // 		<< std::setw(8) << h_data[i].y << ", "
-  // 		<< std::setw(8) << h_data[i].z << ")"
-  // 		<< "\t" << std::setw(9) << output_data[i] << std::endl;
-  //   // clang-format on
-  // }
-
-  // std::vector<float> test(100);
-  // std::ranges::generate(test, [&] { return dis(gen); });
-
-  // core::Tensor tensor(engine.get_device_ptr(), test.data(), test.size(),
-  //                     sizeof(decltype(test)::value_type));
-
-  // std::cout << "tensor: " << tensor << std::endl;
 
   std::cout << "Done!" << std::endl;
   return EXIT_SUCCESS;

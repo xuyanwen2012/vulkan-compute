@@ -9,6 +9,7 @@
 #include "vk_mem_alloc.h"
 
 namespace core {
+
 // Need a global allocator for VMA
 extern VmaAllocator g_allocator;
 

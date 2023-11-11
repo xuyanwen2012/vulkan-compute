@@ -20,14 +20,14 @@ namespace core {
   return spec_const;
 }
 
-class YxAlgorithm final : public VulkanResource<vk::ShaderModule> {
+class Algorithm final : public VulkanResource<vk::ShaderModule> {
 
 public:
-  YxAlgorithm(const std::shared_ptr<vk::Device> &device_ptr,
-              const std::string_view spirv_filename,
-              const std::vector<std::shared_ptr<Buffer>> &buffers = {},
-              const std::array<uint32_t, 3> &workgroup = {},
-              const std::vector<float> &push_constants = {})
+  Algorithm(const std::shared_ptr<vk::Device> &device_ptr,
+            const std::string_view spirv_filename,
+            const std::vector<std::shared_ptr<Buffer>> &buffers = {},
+            const std::array<uint32_t, 3> &workgroup = {},
+            const std::vector<float> &push_constants = {})
       : VulkanResource(device_ptr), spirv_filename_(spirv_filename),
         usm_buffers_(buffers) {
     if (!buffers.empty()) {
@@ -40,7 +40,7 @@ public:
     }
   }
 
-  ~YxAlgorithm() override {
+  ~Algorithm() override {
     spdlog::debug("YxAlgorithm::~YxAlgorithm");
     destroy();
   }
@@ -179,8 +179,8 @@ protected:
       std::vector<vk::WriteDescriptorSet> compute_write_descriptor_sets;
       compute_write_descriptor_sets.reserve(usm_buffers_.size());
 
-      vk::DescriptorBufferInfo buf_info =
-          usm_buffers_[i]->constructDescriptorBufferInfo();
+      const vk::DescriptorBufferInfo buf_info =
+          usm_buffers_[i]->construct_descriptor_buffer_info();
 
       compute_write_descriptor_sets.emplace_back(
           descriptor_set_,
@@ -218,6 +218,8 @@ protected:
 
     // Pipeline itself (3/3)
     const auto spec_map = clspv_default_spec_const();
+
+    // I think this workgroup is telling the shader how many blocks to run?
     const std::array spec_map_content{workgroup_[0], workgroup_[1],
                                       workgroup_[2]};
 
