@@ -36,9 +36,9 @@ int main(int argc, char **argv) {
   std::default_random_engine gen(114514); // NOLINT(cert-msc51-cpp)
   std::uniform_real_distribution dis(min_coord, range);
 
-  std::vector<InputT> h_data(InputSize());
-  std::ranges::generate(
-      h_data, [&] { return glm::vec4(dis(gen), dis(gen), dis(gen), 0.0f); });
+  // std::vector<InputT> h_data(InputSize());
+  // std::ranges::generate(
+  //     h_data, [&] { return glm::vec4(dis(gen), dis(gen), dis(gen), 0.0f); });
 
   core::ComputeEngine engine{};
 
@@ -46,24 +46,36 @@ int main(int argc, char **argv) {
 
   //  auto tensorInA
 
-  std::vector<float> data(100);
-  std::ranges::generate(data, [&] { return dis(gen); });
+  constexpr auto n = 1024;
 
-  // TODO: engine from
-  // Note: currently the buffer size is the N*sizeof(T)
-  // core::Buffer in_buffer(engine.get_device_ptr(), data.size() *
-  // sizeof(float)); core::Buffer out_buffer(engine.get_device_ptr(),
-  // data.size() * sizeof(float));
+  std::vector<float> in_data(n);
+  std::ranges::generate(in_data, [&] { return dis(gen); });
 
+  // std::array<uint32_t, 3> workgroup{32, 1, 1};
   std::array<uint32_t, 3> workgroup{32, 1, 1};
-  std::vector<float> push_const{0, 0, 0, 0};
+  std::vector<float> push_const{0, 0, 0, 0, n};
 
-  // std::vector<std::shared_ptr<core::Buffer>> params {in_buffer, out_buffer};
+  auto in_buf = engine.yx_buffer(n);
+  auto out_but = engine.yx_buffer(n);
 
-  auto a = engine.yx_buffer(1024);
-  auto b = engine.yx_buffer(1024);
-  std::vector<std::shared_ptr<core::Buffer>> params{a, b};
-  auto algo = engine.yx_algorithm("morton", params, workgroup, push_const);
+  in_buf->tmp_write_data((void *)in_data.data(),
+                         in_data.size() * sizeof(float));
+
+  std::vector<std::shared_ptr<core::Buffer>> params{in_buf, out_but};
+  auto algo =
+      engine.yx_algorithm("float_doubler", params, workgroup, push_const);
+
+  auto seq = engine.yx_sequence();
+  seq->record(*algo);
+  seq->launch_kernel_async();
+  seq->sync();
+
+  auto o = reinterpret_cast<const float *>(out_but->get_data());
+  for (int i = 0; i < 256; ++i) {
+    std::cout << i << ":\t" << in_data[i] << "\t-\t" << o[i] << std::endl;
+  }
+
+  // algo->record_bind_core(seq.command_buff_);
 
   // algo->set_push_constants(h_data);
   // algo->set_workgroup({32, 1, 1});
@@ -78,7 +90,8 @@ int main(int argc, char **argv) {
   // engine.run(h_data);
 
   // const auto output_data =
-  //     reinterpret_cast<const OutputT *>(engine.usm_buffers_[1]->get_data());
+  //     reinterpret_cast<const OutputT
+  //     *>(engine.usm_buffers_[1]->get_data());
 
   // std::cout << "Output:" << std::endl;
   // for (size_t i = 0; i < 10; ++i) {

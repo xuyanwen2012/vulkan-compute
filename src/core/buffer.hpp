@@ -80,24 +80,30 @@ public:
   }
   [[nodiscard]] vk::DeviceSize get_size() const { return size_; }
 
-  void update(const std::vector<std::byte> &data,
-              const size_t offset = 0) const {
-    update(data.data(), data.size(), offset);
-  }
+  // void update(const std::vector<std::byte> &data,
+  //             const size_t offset = 0) const {
+  //   update(data.data(), data.size(), offset);
+  // }
 
-  void update(const void *data, const size_t size,
-              const size_t offset = 0) const {
-    update(static_cast<const std::byte *>(data), size, offset);
-  }
+  // void update(const void *data, const size_t size,
+  //             const size_t offset = 0) const {
+  //   update(static_cast<const std::byte *>(data), size, offset);
+  // }
 
-  void update(const std::byte *data, const size_t size,
-              const size_t offset = 0) const {
+  // void update(const std::byte *data, const size_t size,
+  //             const size_t offset = 0) const {
+  //   spdlog::info("Writting {} bytes to buffer", size);
+  //   std::memcpy(mapped_data_ + offset, data, size);
+  // }
+
+  // template <class T>
+  // void convert_and_update(const T &object, const size_t offset = 0) {
+  //   update(reinterpret_cast<const std::byte *>(&object), sizeof(T), offset);
+  // }
+
+  void tmp_write_data(const void *data, const size_t size, const size_t offset = 0){
+    spdlog::info("Writting {} bytes to buffer", size);
     std::memcpy(mapped_data_ + offset, data, size);
-  }
-
-  template <class T>
-  void convert_and_update(const T &object, const size_t offset = 0) {
-    update(reinterpret_cast<const std::byte *>(&object), sizeof(T), offset);
   }
 
   // ---------------------------------------------------------------------------

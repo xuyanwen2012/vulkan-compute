@@ -6,27 +6,28 @@
 
 #include "base_engine.hpp"
 #include "buffer.hpp"
+#include "sequence.hpp"
 #include "yx_algorithm.hpp"
 
-using InputT = glm::vec4;
-using OutputT = glm::uint;
+// using InputT = glm::vec4;
+// using OutputT = glm::uint;
 
-[[nodiscard]] constexpr uint32_t InputSize() { return 1024; }
-[[nodiscard]] constexpr uint32_t ComputeShaderProcessUnit() { return 256; }
+// [[nodiscard]] constexpr uint32_t InputSize() { return 1024; }
+// [[nodiscard]] constexpr uint32_t ComputeShaderProcessUnit() { return 256; }
 
-[[nodiscard]] constexpr uint32_t div_up(const uint32_t x, const uint32_t y) {
-  return (x + y - 1u) / y;
-}
+// [[nodiscard]] constexpr uint32_t div_up(const uint32_t x, const uint32_t y) {
+//   return (x + y - 1u) / y;
+// }
 
-[[nodiscard]] constexpr uint32_t NumWorkGroup(const uint32_t items) {
-  return div_up(items, ComputeShaderProcessUnit());
-}
+// [[nodiscard]] constexpr uint32_t NumWorkGroup(const uint32_t items) {
+//   return div_up(items, ComputeShaderProcessUnit());
+// }
 
-struct MyPushConst {
-  uint32_t n;
-  float min_coord;
-  float range;
-};
+// struct MyPushConst {
+//   uint32_t n;
+//   float min_coord;
+//   float range;
+// };
 
 namespace core {
 class ComputeEngine : public BaseEngine {
@@ -63,6 +64,16 @@ public:
       yx_buffers_.clear();
     }
 
+    if (manage_resources_ && !yx_sequence_.empty()) {
+      spdlog::debug("ComputeEngine::destroy() explicitly freeing sequences");
+      for (auto &weak_sequence : yx_sequence_) {
+        if (const auto sequence = weak_sequence.lock()) {
+          sequence->destroy();
+        }
+      }
+      yx_sequence_.clear();
+    }
+
     vkh_device_.destroyFence(immediate_fence_);
     vkh_device_.freeCommandBuffers(command_pool_, immediate_command_buffer_);
     vkh_device_.destroyCommandPool(command_pool_);
@@ -74,6 +85,14 @@ public:
       yx_buffers_.push_back(buf);
     }
     return buf;
+  }
+
+  [[nodiscard]] std::shared_ptr<Sequence> yx_sequence() {
+    auto seq = std::make_shared<Sequence>(get_device_ptr(), device_, queue_);
+    if (manage_resources_) {
+      yx_sequence_.push_back(seq);
+    }
+    return seq;
   }
 
   template <typename... Args>
@@ -98,53 +117,54 @@ public:
     vkh_device_.resetFences(immediate_fence_);
   }
 
-  void run(const std::vector<InputT> &input_data) {
-    // execute_sync
-    const auto cmd_buf_alloc_info =
-        vk::CommandBufferAllocateInfo()
-            .setCommandPool(command_pool_)
-            .setLevel(vk::CommandBufferLevel::ePrimary)
-            .setCommandBufferCount(1);
+  // void run(const std::vector<InputT> &input_data) {
+  //   // execute_sync
+  //   const auto cmd_buf_alloc_info =
+  //       vk::CommandBufferAllocateInfo()
+  //           .setCommandPool(command_pool_)
+  //           .setLevel(vk::CommandBufferLevel::ePrimary)
+  //           .setCommandBufferCount(1);
 
-    immediate_command_buffer_ =
-        vkh_device_.allocateCommandBuffers(cmd_buf_alloc_info).front();
+  //   immediate_command_buffer_ =
+  //       vkh_device_.allocateCommandBuffers(cmd_buf_alloc_info).front();
 
-    // ------- RECORD COMMAND BUFFER --------
+  //   // ------- RECORD COMMAND BUFFER --------
 
-    // algorithm_->record_bind_core(immediate_command_buffer_);
+  //   // algorithm_->record_bind_core(immediate_command_buffer_);
 
-    // algorithm_->record_dispatch(immediate_command_buffer_);
+  //   // algorithm_->record_dispatch(immediate_command_buffer_);
 
-    // constexpr auto begin_info = vk::CommandBufferBeginInfo().setFlags(
-    //     vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-    // immediate_command_buffer_.begin(begin_info);
+  //   // constexpr auto begin_info = vk::CommandBufferBeginInfo().setFlags(
+  //   //     vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+  //   // immediate_command_buffer_.begin(begin_info);
 
-    // immediate_command_buffer_.bindPipeline(vk::PipelineBindPoint::eCompute,
-    //                                        pipeline_);
-    // immediate_command_buffer_.bindDescriptorSets(
-    //     vk::PipelineBindPoint::eCompute, pipeline_layout_, 0,
-    //     descriptor_set_, nullptr);
-    // // push const
-    // constexpr uint32_t default_push[3]{0, 0, 0};
-    // immediate_command_buffer_.pushConstants(
-    //     pipeline_layout_, vk::ShaderStageFlagBits::eCompute, 0,
-    //     sizeof(default_push), default_push);
+  //   //
+  //   immediate_command_buffer_.bindPipeline(vk::PipelineBindPoint::eCompute,
+  //   //                                        pipeline_);
+  //   // immediate_command_buffer_.bindDescriptorSets(
+  //   //     vk::PipelineBindPoint::eCompute, pipeline_layout_, 0,
+  //   //     descriptor_set_, nullptr);
+  //   // // push const
+  //   // constexpr uint32_t default_push[3]{0, 0, 0};
+  //   // immediate_command_buffer_.pushConstants(
+  //   //     pipeline_layout_, vk::ShaderStageFlagBits::eCompute, 0,
+  //   //     sizeof(default_push), default_push);
 
-    // constexpr MyPushConst push_const{InputSize(), 0.0f, 1024.0f};
-    // immediate_command_buffer_.pushConstants(
-    //     pipeline_layout_, vk::ShaderStageFlagBits::eCompute, 16,
-    //     sizeof(push_const), &push_const);
+  //   // constexpr MyPushConst push_const{InputSize(), 0.0f, 1024.0f};
+  //   // immediate_command_buffer_.pushConstants(
+  //   //     pipeline_layout_, vk::ShaderStageFlagBits::eCompute, 16,
+  //   //     sizeof(push_const), &push_const);
 
-    // // equivalent to CUDA number of blocks
-    // constexpr auto group_count_x = NumWorkGroup(InputSize());
+  //   // // equivalent to CUDA number of blocks
+  //   // constexpr auto group_count_x = NumWorkGroup(InputSize());
 
-    // immediate_command_buffer_.dispatch(group_count_x, 1, 1);
-    // immediate_command_buffer_.end();
+  //   // immediate_command_buffer_.dispatch(group_count_x, 1, 1);
+  //   // immediate_command_buffer_.end();
 
-    // ------- SUBMIT COMMAND BUFFER --------
+  //   // ------- SUBMIT COMMAND BUFFER --------
 
-    submit_and_wait(immediate_command_buffer_);
-  }
+  //   submit_and_wait(immediate_command_buffer_);
+  // }
 
 protected:
   void create_sync_object() {
@@ -180,6 +200,7 @@ private:
 
   std::vector<std::weak_ptr<YxAlgorithm>> yx_algorithms_;
   std::vector<std::weak_ptr<Buffer>> yx_buffers_;
+  std::vector<std::weak_ptr<Sequence>> yx_sequence_;
 
   // Should the engine manage the above resources?
   bool manage_resources_ = true;

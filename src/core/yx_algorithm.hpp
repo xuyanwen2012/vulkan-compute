@@ -117,6 +117,28 @@ public:
             static_cast<T *>(push_constants_data_) + push_constants_size_};
   }
 
+  // Provided for sequence(cmd buffer)
+  void record_bind_core(const vk::CommandBuffer &cmd_buf) const {
+    cmd_buf.bindPipeline(vk::PipelineBindPoint::eCompute, pipeline_);
+    cmd_buf.bindDescriptorSets(vk::PipelineBindPoint::eCompute,
+                               pipeline_layout_, 0, descriptor_set_, nullptr);
+  }
+
+  void record_bind_push(const vk::CommandBuffer &cmd_buf) const {
+    spdlog::debug("YxAlgorithm::record_bind_push, constants memory size: {}",
+                  push_constants_size_ * push_constants_data_type_memory_size_);
+
+    cmd_buf.pushConstants(
+        pipeline_layout_, vk::ShaderStageFlagBits::eCompute, 0,
+        push_constants_size_ * push_constants_data_type_memory_size_,
+        push_constants_data_);
+  }
+
+  void record_dispatch(const vk::CommandBuffer &cmd_buf) {
+
+    cmd_buf.dispatch(workgroup_[0], workgroup_[1], workgroup_[2]);
+  }
+
 protected:
   // Basically setup the buffer, its descriptor set, binding etc.
   void create_parameters() {
@@ -230,7 +252,7 @@ protected:
 
   void create_shader_module() {
     //  ------
-    auto &shader_code = morton_spv;
+    auto &shader_code = float_doubler_spv;
     // ------
 
     const std::vector spivr_binary(shader_code,

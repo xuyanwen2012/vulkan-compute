@@ -31,8 +31,7 @@ public:
     destroy();
   }
 
-  void destroy() const
-  {
+  void destroy() const {
     if (g_allocator != VK_NULL_HANDLE) {
       vmaDestroyAllocator(g_allocator);
     }
@@ -45,6 +44,9 @@ public:
   [[nodiscard]] auto get_device_ptr() {
     return std::make_shared<vk::Device>(device_.device);
   }
+
+  [[nodiscard]] vk::Queue &get_queue() { return queue_; }
+  [[nodiscard]] const vk::Queue &get_queue() const { return queue_; }
 
 private:
   void device_initialization() {
