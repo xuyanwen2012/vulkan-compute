@@ -6,6 +6,7 @@
 }
 
 namespace core {
+
 void Sequence::record(const Algorithm &algo) const {
   begin();
   algo.record_bind_core(handle_);
@@ -73,4 +74,5 @@ void Sequence::create_command_buffer() {
 
   handle_ = device_ptr_->allocateCommandBuffers(alloc_info).front();
 }
+
 } // namespace core

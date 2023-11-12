@@ -3,6 +3,7 @@
 #include "base_engine.hpp"
 
 namespace core {
+
 Buffer::Buffer(std::shared_ptr<vk::Device> device_ptr,
                const vk::DeviceSize size,
                const vk::BufferUsageFlags buffer_usage,
@@ -54,4 +55,5 @@ void Buffer::destroy() {
     vmaDestroyBuffer(g_allocator, get_handle(), allocation_);
   }
 }
+
 } // namespace core

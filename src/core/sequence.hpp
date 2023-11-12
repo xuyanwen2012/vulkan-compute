@@ -29,22 +29,16 @@ public:
   ~Sequence() override { destroy(); }
 
   void record(const Algorithm &algo) const;
-
   void begin() const;
-
   void end() const;
-
   void launch_kernel_async();
-
   void sync() const;
 
   void destroy() override;
 
 protected:
   void create_sync_objects();
-
   void create_command_pool();
-
   void create_command_buffer();
 
 private:
