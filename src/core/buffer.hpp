@@ -73,14 +73,12 @@ public:
   // }
 
   void tmp_write_data(const void *data, const size_t size,
-                      const size_t offset = 0) const
-  {
+                      const size_t offset = 0) const {
     spdlog::info("Writing {} bytes to buffer", size);
     std::memcpy(mapped_data_ + offset, data, size);
   }
 
-  void tmp_fill_zero(const size_t size, const size_t offset = 0) const
-  {
+  void tmp_fill_zero(const size_t size, const size_t offset = 0) const {
     spdlog::info("Filling zeros {} bytes to buffer", size);
     std::memset(mapped_data_ + offset, 0, size);
   }

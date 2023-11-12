@@ -45,8 +45,7 @@ int main(int argc, char **argv) {
   const auto in_buf = engine.yx_buffer(n);
   const auto out_but = engine.yx_buffer(n);
 
-  in_buf->tmp_write_data(in_data.data(),
-                         in_data.size() * sizeof(float));
+  in_buf->tmp_write_data(in_data.data(), in_data.size() * sizeof(float));
 
   out_but->tmp_fill_zero(in_data.size() * sizeof(float));
 

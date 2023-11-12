@@ -53,6 +53,7 @@ private:
   std::vector<std::weak_ptr<Buffer>> buffers_;
   std::vector<std::weak_ptr<Sequence>> sequence_;
 
-  bool manage_resources_ = true; // Should the engine manage the above resources?
+  bool manage_resources_ =
+      true; // Should the engine manage the above resources?
 };
 } // namespace core

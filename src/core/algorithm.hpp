@@ -34,8 +34,8 @@ public:
     this->set_push_constants(push_constants.data(), size, memory_size);
   }
 
-  void set_push_constants(const void *data,  uint32_t size,
-                           uint32_t memory_size);
+  void set_push_constants(const void *data, uint32_t size,
+                          uint32_t memory_size);
 
   void set_workgroup_size(const WorkGroup &workgroup_size) {
     workgroup_size_ = workgroup_size;
