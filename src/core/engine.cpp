@@ -1,6 +1,7 @@
 #include "engine.hpp"
 
 namespace core {
+
 void ComputeEngine::destroy() {
   if (manage_resources_ && !algorithms_.empty()) {
     spdlog::debug("ComputeEngine::destroy() explicitly freeing algorithms");
@@ -32,4 +33,5 @@ void ComputeEngine::destroy() {
     sequence_.clear();
   }
 }
+
 } // namespace core

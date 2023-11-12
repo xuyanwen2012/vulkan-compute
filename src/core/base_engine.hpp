@@ -11,7 +11,11 @@ namespace core {
 // Need a global allocator for VMA
 extern VmaAllocator g_allocator;
 
-// Base Engine does The Setup. Single device, single queue
+/**
+ * @brief BaseEngine setup the Vulkan instance, physical device, logical device
+ * etc. For compute shader only.
+ *
+ */
 class BaseEngine {
 public:
   BaseEngine();
@@ -34,9 +38,7 @@ public:
 
 private:
   void device_initialization();
-
   void get_queues();
-
   void vma_initialization() const;
 
 protected:

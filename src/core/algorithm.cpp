@@ -17,6 +17,7 @@
 }
 
 namespace core {
+
 Algorithm::Algorithm(const std::shared_ptr<vk::Device> &device_ptr,
                      const std::string_view spirv_filename,
                      const std::vector<std::shared_ptr<Buffer>> &buffers,

@@ -7,14 +7,18 @@ namespace core {
 
 using WorkGroup = std::array<uint32_t, 3>;
 
+/**
+ * @brief Algorithm is an abstraction of a compute shader. It creates compute
+ * pipeline for this shader, and creates the necessary components to it.
+ */
 class Algorithm final : public VulkanResource<vk::ShaderModule> {
 
 public:
-  Algorithm(const std::shared_ptr<vk::Device> &device_ptr,
-            std::string_view spirv_filename,
-            const std::vector<std::shared_ptr<Buffer>> &buffers = {},
-            const WorkGroup &workgroup_size = {},
-            const std::vector<float> &push_constants = {});
+  explicit Algorithm(const std::shared_ptr<vk::Device> &device_ptr,
+                     std::string_view spirv_filename,
+                     const std::vector<std::shared_ptr<Buffer>> &buffers = {},
+                     const WorkGroup &workgroup_size = {},
+                     const std::vector<float> &push_constants = {});
 
   ~Algorithm() override {
     spdlog::debug("YxAlgorithm::~YxAlgorithm");
@@ -48,17 +52,13 @@ public:
 
   // Provided for sequence(cmd buffer)
   void record_bind_core(const vk::CommandBuffer &cmd_buf) const;
-
   void record_bind_push(const vk::CommandBuffer &cmd_buf) const;
-
   void record_dispatch(const vk::CommandBuffer &cmd_buf) const;
 
 protected:
   // Basically setup the buffer, its descriptor set, binding etc.
   void create_parameters();
-
   void create_pipeline();
-
   void create_shader_module();
 
 private:
@@ -77,6 +77,7 @@ private:
 
   std::vector<std::shared_ptr<Buffer>> usm_buffers_;
 
+  // Currently this assume the push constant is homogeneous type
   void *push_constants_data_ = nullptr;
   uint32_t push_constants_data_type_memory_size_ = 0;
   uint32_t push_constants_size_ = 0;

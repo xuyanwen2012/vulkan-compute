@@ -9,6 +9,14 @@
 #include "sequence.hpp"
 
 namespace core {
+
+/**
+ * @brief ComputeEngine is the main class of this library. It provides
+ * interfaces for users to create buffers, algorithms, and sequences.
+ *
+ * It also manages the lifetime of these resources, and frees them when
+ * necessary.
+ */
 class ComputeEngine : public BaseEngine {
 public:
   ComputeEngine() : vkh_device_(device_.device) {}

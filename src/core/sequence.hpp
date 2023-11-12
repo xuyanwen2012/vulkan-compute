@@ -16,9 +16,9 @@ namespace core {
  */
 class Sequence final : public VulkanResource<vk::CommandBuffer> {
 public:
-  Sequence(std::shared_ptr<vk::Device> device_ptr,
-           const vkb::Device &vkb_device,
-           vk::Queue &queue) // tmp
+  explicit Sequence(std::shared_ptr<vk::Device> device_ptr,
+                    const vkb::Device &vkb_device,
+                    vk::Queue &queue) // tmp
       : VulkanResource(std::move(device_ptr)), vkb_device_(vkb_device),
         vkh_queue_(&queue) {
     create_sync_objects();
