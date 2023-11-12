@@ -10,8 +10,6 @@
 
 #include "core/buffer.hpp"
 #include "core/engine.hpp"
-// #include "core/sequence.hpp"
-
 #include "spdlog/spdlog.h"
 
 namespace core {
@@ -44,30 +42,30 @@ int main(int argc, char **argv) {
   // Computation start here
   core::ComputeEngine engine{};
 
-  auto in_buf = engine.yx_buffer(n);
-  auto out_but = engine.yx_buffer(n);
+  const auto in_buf = engine.yx_buffer(n);
+  const auto out_but = engine.yx_buffer(n);
 
-  in_buf->tmp_write_data(reinterpret_cast<void *>(in_data.data()),
+  in_buf->tmp_write_data(in_data.data(),
                          in_data.size() * sizeof(float));
 
   out_but->tmp_fill_zero(in_data.size() * sizeof(float));
 
-  std::vector<std::shared_ptr<core::Buffer>> params{in_buf, out_but};
+  std::vector params{in_buf, out_but};
 
   // I still want to know what workgroup means
   // std::array<uint32_t, 3> workgroup{core::num_blocks(n, 256), 1, 1};
   core::WorkGroup workgroup_size{32, 1, 1};
 
   std::vector<float> push_const{0, 0, 0, 0, n};
-  auto algo =
+  const auto algo =
       engine.yx_algorithm("float_doubler", params, workgroup_size, push_const);
 
-  auto seq = engine.yx_sequence();
+  const auto seq = engine.yx_sequence();
   seq->record(*algo);
   seq->launch_kernel_async();
   seq->sync();
 
-  auto o = reinterpret_cast<const float *>(out_but->get_data());
+  const auto o = reinterpret_cast<const float *>(out_but->get_data());
   for (int i = 0; i < n; ++i) {
     std::cout << i << ":\t" << in_data[i] << "\t-\t" << o[i] << std::endl;
   }

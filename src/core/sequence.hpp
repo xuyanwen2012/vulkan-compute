@@ -3,15 +3,8 @@
 #include "VkBootstrap.h"
 #include "algorithm.hpp"
 #include "vulkan_resource.hpp"
-#include <memory>
-#include <vulkan/vulkan_handles.hpp>
 
 namespace core {
-
-[[nodiscard]] constexpr uint32_t num_blocks(const uint32_t items,
-                                            const uint32_t threads_per_block) {
-  return (items + threads_per_block - 1u) / threads_per_block;
-}
 
 /**
  * @brief Sequence class is an abstraction of a Vulkan command buffer. It
@@ -35,79 +28,24 @@ public:
 
   ~Sequence() override { destroy(); }
 
-  void record(Algorithm &algo) {
-    begin();
-    algo.record_bind_core(handle_);
-    algo.record_bind_push(handle_);
-    algo.record_dispatch(handle_);
-    end();
-  }
+  void record(const Algorithm &algo) const;
 
-  void begin() {
-    spdlog::debug("Sequence::begin!");
-    const auto info = vk::CommandBufferBeginInfo().setFlags(
-        vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-    handle_.begin(info);
-  }
+  void begin() const;
 
-  void end() {
-    spdlog::debug("Sequence::end!");
-    handle_.end();
-  }
+  void end() const;
 
-  // void push_constants(const vk::Pipeline &pipeline, const std::byte *data,
-  //                     const size_t size) {}
+  void launch_kernel_async();
 
-  void launch_kernel_async() {
-    spdlog::debug("Sequence::launch_kernel_async");
-    const auto submit_info = vk::SubmitInfo().setCommandBuffers(handle_);
-    assert(vkh_queue_ != nullptr);
-    vkh_queue_->submit(submit_info, fence_);
-  }
+  void sync() const;
 
-  void sync() {
-    spdlog::debug("Sequence::sync");
-    const auto wait_result =
-        device_ptr_->waitForFences(fence_, false, UINT64_MAX);
-    assert(wait_result == vk::Result::eSuccess);
-    device_ptr_->resetFences(fence_);
-  }
-
-  void destroy() override {
-    device_ptr_->freeCommandBuffers(command_pool_, handle_);
-    device_ptr_->destroyCommandPool(command_pool_);
-    device_ptr_->destroyFence(fence_);
-  }
+  void destroy() override;
 
 protected:
-  void create_sync_objects() {
-    fence_ = device_ptr_->createFence(vk::FenceCreateInfo());
-  }
+  void create_sync_objects();
 
-  void create_command_pool() {
-    spdlog::debug("Sequence::create_command_pool");
+  void create_command_pool();
 
-    const auto create_info =
-        vk::CommandPoolCreateInfo()
-            .setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer)
-            .setQueueFamilyIndex(
-                vkb_device_.get_queue_index(vkb::QueueType::compute).value());
-
-    command_pool_ = device_ptr_->createCommandPool(create_info);
-  }
-
-  void create_command_buffer() {
-    spdlog::debug("Sequence::create_command_buffer");
-
-    const auto alloc_info = vk::CommandBufferAllocateInfo()
-                                .setCommandBufferCount(1)
-                                .setLevel(vk::CommandBufferLevel::ePrimary)
-                                .setCommandPool(command_pool_);
-
-    handle_ = device_ptr_->allocateCommandBuffers(alloc_info).front();
-  }
-
-  void create_timestamp_query_pool(uint32_t totalTimestamps);
+  void create_command_buffer();
 
 private:
   const vkb::Device &vkb_device_;
@@ -115,7 +53,6 @@ private:
 
   vk::CommandPool command_pool_;
   vk::Fence fence_;
-  vk::QueryPool timestamp_query_pool_;
 };
 
 } // namespace core
