@@ -283,6 +283,7 @@ private:
   vk::DescriptorSet descriptor_set_;
 
   // In CUDA terms, this is the number threads per block
+  // or work-items per work-group
   WorkGroup workgroup_size_;
 
   std::vector<std::shared_ptr<Buffer>> usm_buffers_;
