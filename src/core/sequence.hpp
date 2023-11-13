@@ -16,6 +16,14 @@ namespace core {
  */
 class Sequence final : public VulkanResource<vk::CommandBuffer> {
  public:
+  /**
+   * @brief Construct a new Sequence object. It will create a command pool and
+   * command buffer.
+   *
+   * @param device_ptr Pointer to the device
+   * @param vkb_device vkb::Device object
+   * @param queue Queue to submit the commands
+   */
   explicit Sequence(std::shared_ptr<vk::Device> device_ptr,
                     const vkb::Device &vkb_device,
                     vk::Queue &queue)  // tmp
@@ -28,12 +36,15 @@ class Sequence final : public VulkanResource<vk::CommandBuffer> {
   }
 
   ~Sequence() override { destroy(); }
+  void destroy() override;
 
-  [[deprecated("Too complicated")]] void record(const Algorithm &algo) const;
-
-  void launch_kernel_async();
-  void sync() const;
-
+  /**
+   * @brief Record the commands of an Algorithm. It will bind pipeline, push
+   * constants, and dispatch.
+   *
+   * @param algo Algorithm to be recorded.
+   * @param n Number of elements to be processed.
+   */
   void simple_record_commands(const Algorithm &algo, const uint32_t n) const {
     cmd_begin();
     algo.record_bind_core(handle_);
@@ -42,9 +53,24 @@ class Sequence final : public VulkanResource<vk::CommandBuffer> {
     cmd_end();
   }
 
-  void destroy() override;
+  /**
+   * @brief Once all commands are recorded, you can launch the kernel. It will
+   * submit all the commands to the GPU. It is asynchronous, so you can do other
+   * CPU tasks while the GPU is processing.
+   */
+  void launch_kernel_async();
+
+  /**
+   * @brief Wait for the GPU to finish all the commands. This is like
+   * "cudaDeviceSynchronize()"
+   */
+  void sync() const;
 
  protected:
+  // ---------------------------------------------------------------------------
+  //                            Helpers
+  // ---------------------------------------------------------------------------
+
   void create_sync_objects();
   void create_command_pool();
   void create_command_buffer();

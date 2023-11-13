@@ -18,11 +18,13 @@ template <typename HandleT>
 class VulkanResource {
  public:
   VulkanResource() = delete;
+
   explicit VulkanResource(std::shared_ptr<vk::Device> device_ptr)
       : device_ptr_{std::move(device_ptr)} {}
 
   VulkanResource(const VulkanResource &) = delete;
   VulkanResource(VulkanResource &&) = delete;
+
   virtual ~VulkanResource() = default;
 
   VulkanResource &operator=(const VulkanResource &) = delete;

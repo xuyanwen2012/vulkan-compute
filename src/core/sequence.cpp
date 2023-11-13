@@ -7,17 +7,6 @@
 
 namespace core {
 
-void Sequence::record(const Algorithm &algo) const {
-  cmd_begin();
-  algo.record_bind_core(handle_);
-  algo.record_bind_push(handle_);
-
-  // usm_buffers_
-  // algo.record_dispatch(handle_);
-  // algo.record_dispatch_tmp(handle_);
-  cmd_end();
-}
-
 void Sequence::cmd_begin() const {
   spdlog::debug("Sequence::begin!");
   constexpr auto info = vk::CommandBufferBeginInfo().setFlags(

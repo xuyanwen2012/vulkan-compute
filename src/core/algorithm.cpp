@@ -50,6 +50,7 @@ void Algorithm::destroy() {
   device_ptr_->destroyPipelineLayout(pipeline_layout_);
   device_ptr_->destroyDescriptorSetLayout(descriptor_set_layout_);
   device_ptr_->destroyDescriptorPool(descriptor_pool_);
+  free(push_constants_data_);
 }
 
 void Algorithm::set_push_constants(const void *data,

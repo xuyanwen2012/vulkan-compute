@@ -5,7 +5,7 @@ add_requires("vk-bootstrap", "vulkan-memory-allocator", "spirv-cross", "glm")
 add_requires("vulkansdk", {system = true})
 
 -- Others
-add_requires("spdlog")
+add_requires("spdlog", "cli11")
 
 add_rules("mode.debug", "mode.release")
 
@@ -44,4 +44,4 @@ target("vulkan-compute")
     add_headerfiles("src/core/*.hpp")
     add_packages("vk-bootstrap", "vulkan-memory-allocator", "spirv-cross", "glm",
                 "vulkansdk")
-    add_packages("spdlog")
+    add_packages("spdlog", "cli11")

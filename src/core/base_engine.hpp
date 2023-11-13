@@ -13,9 +13,10 @@ namespace core {
 extern VmaAllocator g_allocator;
 
 /**
- * @brief BaseEngine setup the Vulkan instance, physical device, logical device
- * etc. For compute shader only.
- *
+ * @brief Basically do the initializations, save you a lot of time. BaseEngine
+ * will setup the Vulkan instance, physical device, logical device etc. For
+ * compute shader usage only. By default it will pick an integrated GPU, with
+ * compute queue. It should only pick integrated GPU.
  */
 class BaseEngine {
  public:
