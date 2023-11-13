@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "vma_usage.hpp"
+
 namespace core {
 
 BaseEngine::BaseEngine() {

@@ -11,9 +11,9 @@
 #include "core/engine.hpp"
 #include "spdlog/spdlog.h"
 
-namespace core {
-VmaAllocator g_allocator;
-}
+// namespace core {
+// VmaAllocator g_allocator;
+// }
 
 [[nodiscard]] std::ostream &operator<<(std::ostream &os, const glm::vec3 &v) {
   os << "(" << v.x << ", " << v.y << ", " << v.z << ")";
@@ -24,8 +24,9 @@ int main(int argc, char **argv) {
   CLI::App app{"Vulkan Compute Example"};
 
   std::string log_level = "info";  // Default log level
+
   app.add_option(
-      "--log-level",
+      "-l,--log-level",
       log_level,
       "Set the log level (trace, debug, info, warn, error, critical)");
 
@@ -73,8 +74,8 @@ int main(int argc, char **argv) {
   // Computation start here
   core::ComputeEngine engine{};
 
-  const auto in_buf = engine.yx_buffer(in_data.size() * sizeof(float));
-  const auto out_but = engine.yx_buffer(in_data.size() * sizeof(float));
+  const auto in_buf = engine.buffer(in_data.size() * sizeof(float));
+  const auto out_but = engine.buffer(in_data.size() * sizeof(float));
 
   // in_buf->tmp_write_data(in_data.data(), in_data.size() * sizeof(float));
   in_buf->tmp_debug_data(in_data.size() * sizeof(float));
@@ -85,10 +86,10 @@ int main(int argc, char **argv) {
   uint32_t threads_per_block = 256;
 
   std::vector<float> push_const{0, 0, 0, 0, n};
-  const auto algo = engine.yx_algorithm(
+  const auto algo = engine.algorithm(
       "float_doubler.spv", params, threads_per_block, push_const);
 
-  const auto seq = engine.yx_sequence();
+  const auto seq = engine.sequence();
 
   seq->simple_record_commands(*algo, n);
   seq->launch_kernel_async();

@@ -28,6 +28,13 @@ class Algorithm final : public VulkanResource<vk::ShaderModule> {
 
   void destroy() override;
 
+  Algorithm(const Algorithm &) = delete;
+  Algorithm(Algorithm &&) = delete;
+
+  // ---------------------------------------------------------------------------
+  //                  Getter and Setter
+  // ---------------------------------------------------------------------------
+
   /**
    * @brief If your push constant is homogeneous type, you can use this function
    * to pass a vector of push constants. Just a nice wrapper of the other
@@ -61,7 +68,9 @@ class Algorithm final : public VulkanResource<vk::ShaderModule> {
             static_cast<T *>(push_constants_data_) + push_constants_size_};
   }
 
-  // Used by Sequence (command buffer)
+  // ---------------------------------------------------------------------------
+  //                  Used by Sequence (command buffer)
+  // ---------------------------------------------------------------------------
 
   /**
    * @brief Let the cmd_buffer to bind my pipeline and descriptor set.
@@ -95,6 +104,7 @@ class Algorithm final : public VulkanResource<vk::ShaderModule> {
  private:
   std::string spirv_filename_;
 
+  // Vulkan components
   vk::Pipeline pipeline_;
   vk::PipelineCache pipeline_cache_;
   vk::PipelineLayout pipeline_layout_;

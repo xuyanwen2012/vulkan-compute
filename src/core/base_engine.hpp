@@ -5,12 +5,12 @@
 #include <vulkan/vulkan.hpp>
 
 #include "VkBootstrap.h"
-#include "vk_mem_alloc.h"
+// #include "vk_mem_alloc.h"
 
 namespace core {
 
 // Need a global allocator for VMA
-extern VmaAllocator g_allocator;
+// extern VmaAllocator g_allocator;
 
 /**
  * @brief Basically do the initializations, save you a lot of time. BaseEngine
@@ -29,14 +29,31 @@ class BaseEngine {
 
   void destroy() const;
 
-  [[nodiscard]] vkb::Device &get_device() { return device_; }
+  // ---------------------------------------------------------------------------
+  //                  Getter and Setter
+  // ---------------------------------------------------------------------------
 
+  [[nodiscard, maybe_unused]] const vkb::Instance &get_instance() const {
+    return instance_;
+  }
+
+  [[nodiscard, maybe_unused]] const vkb::Device &get_device() const {
+    return device_;
+  }
+
+  /**
+   * @brief Make a shared pointer to the vk::Device, NOT the vkb::Device.
+   *
+   * @return std::shared_ptr<vk::Device> A shared pointer to the vk::Device.
+   */
   [[nodiscard]] auto get_device_ptr() {
     return std::make_shared<vk::Device>(device_.device);
   }
 
-  [[nodiscard]] vk::Queue &get_queue() { return queue_; }
-  [[nodiscard]] const vk::Queue &get_queue() const { return queue_; }
+  [[nodiscard, maybe_unused]] vk::Queue &get_queue() { return queue_; }
+  [[nodiscard, maybe_unused]] const vk::Queue &get_queue() const {
+    return queue_;
+  }
 
  private:
   void device_initialization();

@@ -38,6 +38,10 @@ class Sequence final : public VulkanResource<vk::CommandBuffer> {
   ~Sequence() override { destroy(); }
   void destroy() override;
 
+  // ---------------------------------------------------------------------------
+  //             Operations you can do w/ the command buffer
+  // ---------------------------------------------------------------------------
+
   /**
    * @brief Record the commands of an Algorithm. It will bind pipeline, push
    * constants, and dispatch.
@@ -79,9 +83,9 @@ class Sequence final : public VulkanResource<vk::CommandBuffer> {
   void cmd_end() const;
 
  private:
+  // Vulkan components
   const vkb::Device &vkb_device_;
   vk::Queue *vkh_queue_;
-
   vk::CommandPool command_pool_;
   vk::Fence fence_;
 };

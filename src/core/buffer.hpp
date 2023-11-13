@@ -1,11 +1,11 @@
 #pragma once
 
 #include <spdlog/spdlog.h>
-#include <vk_mem_alloc.h>
 
 #include <numeric>
 #include <vulkan/vulkan.hpp>
 
+#include "vma_usage.hpp"
 #include "vulkan_resource.hpp"
 
 namespace core {
@@ -66,9 +66,12 @@ class Buffer final : public VulkanResource<vk::Buffer> {
   // ---------------------------------------------------------------------------
 
   [[nodiscard]] VmaAllocation get_allocation() const { return allocation_; }
+
   [[nodiscard]] const std::byte *get_data() const { return mapped_data_; }
+  [[nodiscard]] std::byte *get_data_mut() { return mapped_data_; }
+
   [[nodiscard]] vk::DeviceMemory get_memory() const { return memory_; }
-  [[nodiscard]] vk::DeviceAddress get_device_address() const {
+  [[nodiscard, maybe_unused]] vk::DeviceAddress get_device_address() const {
     return device_ptr_->getBufferAddressKHR(get_handle());
   }
   [[nodiscard]] vk::DeviceSize get_size() const { return size_; }
@@ -102,9 +105,12 @@ class Buffer final : public VulkanResource<vk::Buffer> {
       const;
 
  private:
+  // Vulkan Memory Allocator components
   VmaAllocation allocation_ = VK_NULL_HANDLE;
   vk::DeviceMemory memory_ = nullptr;
   vk::DeviceSize size_ = 0;
+
+  // Raw pointer to the mapped data, CPU/GPU shared memory.
   std::byte *mapped_data_ = nullptr;
 
   bool persistent_ = true;
