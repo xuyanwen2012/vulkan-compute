@@ -18,7 +18,7 @@ namespace core {
  * necessary.
  */
 class ComputeEngine : public BaseEngine {
-public:
+ public:
   ComputeEngine() : vkh_device_(device_.device) {}
 
   ~ComputeEngine() {
@@ -60,7 +60,7 @@ public:
     return algo;
   }
 
-private:
+ private:
   vk::Device vkh_device_;
 
   std::vector<std::weak_ptr<Algorithm>> algorithms_;
@@ -68,6 +68,6 @@ private:
   std::vector<std::weak_ptr<Sequence>> sequence_;
 
   bool manage_resources_ =
-      true; // Should the engine manage the above resources?
+      true;  // Should the engine manage the above resources?
 };
-} // namespace core
+}  // namespace core

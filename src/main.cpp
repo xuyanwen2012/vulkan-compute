@@ -1,8 +1,9 @@
 
+#include <spdlog/common.h>
+
 #include <algorithm>
 #include <iostream>
 #include <random>
-#include <spdlog/common.h>
 #include <vector>
 
 #define GLM_FORCE_RADIANS
@@ -22,7 +23,6 @@ VmaAllocator g_allocator;
 }
 
 int main(int argc, char **argv) {
-
 #if defined(NDEBUG)
   spdlog::set_level(spdlog::level::off);
 #else
@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
   constexpr auto min_coord = 0.0f;
   constexpr auto max_coord = 1024.0f;
   constexpr auto range = max_coord - min_coord;
-  std::default_random_engine gen(114514); // NOLINT(cert-msc51-cpp)
+  std::default_random_engine gen(114514);  // NOLINT(cert-msc51-cpp)
   std::uniform_real_distribution dis(min_coord, range);
 
   constexpr auto n = 1024;
@@ -54,8 +54,8 @@ int main(int argc, char **argv) {
   uint32_t threads_per_block = 256;
 
   std::vector<float> push_const{0, 0, 0, 0, n};
-  const auto algo = engine.yx_algorithm("float_doubler.spv", params,
-                                        threads_per_block, push_const);
+  const auto algo = engine.yx_algorithm(
+      "float_doubler.spv", params, threads_per_block, push_const);
 
   const auto seq = engine.yx_sequence();
 

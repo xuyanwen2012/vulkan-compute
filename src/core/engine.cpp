@@ -34,4 +34,4 @@ void ComputeEngine::destroy() {
   }
 }
 
-} // namespace core
+}  // namespace core

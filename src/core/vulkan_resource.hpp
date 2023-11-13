@@ -1,7 +1,8 @@
 #pragma once
 
-#include <memory>
 #include <spdlog/spdlog.h>
+
+#include <memory>
 #include <vulkan/vulkan.hpp>
 
 namespace core {
@@ -13,8 +14,9 @@ namespace core {
  *
  * @tparam HandleT The Vulkan handle type (e.g., vk::Buffer, vk::Image, etc.)
  */
-template <typename HandleT> class VulkanResource {
-public:
+template <typename HandleT>
+class VulkanResource {
+ public:
   VulkanResource() = delete;
   explicit VulkanResource(std::shared_ptr<vk::Device> device_ptr)
       : device_ptr_{std::move(device_ptr)} {}
@@ -29,11 +31,11 @@ public:
   [[nodiscard]] HandleT &get_handle() { return handle_; }
   [[nodiscard]] const HandleT &get_handle() const { return handle_; }
 
-protected:
+ protected:
   virtual void destroy() = 0;
 
   std::shared_ptr<vk::Device> device_ptr_;
   HandleT handle_;
 };
 
-}; // namespace core
+};  // namespace core

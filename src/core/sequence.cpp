@@ -80,4 +80,4 @@ void Sequence::create_command_buffer() {
   handle_ = device_ptr_->allocateCommandBuffers(alloc_info).front();
 }
 
-} // namespace core
+}  // namespace core

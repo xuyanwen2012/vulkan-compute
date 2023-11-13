@@ -15,11 +15,12 @@ namespace core {
  * commands. It bind pipeline, push constants, and dispatch.
  */
 class Sequence final : public VulkanResource<vk::CommandBuffer> {
-public:
+ public:
   explicit Sequence(std::shared_ptr<vk::Device> device_ptr,
                     const vkb::Device &vkb_device,
-                    vk::Queue &queue) // tmp
-      : VulkanResource(std::move(device_ptr)), vkb_device_(vkb_device),
+                    vk::Queue &queue)  // tmp
+      : VulkanResource(std::move(device_ptr)),
+        vkb_device_(vkb_device),
         vkh_queue_(&queue) {
     create_sync_objects();
     create_command_pool();
@@ -38,13 +39,12 @@ public:
     algo.record_bind_core(handle_);
     algo.record_bind_push(handle_);
     algo.record_dispatch_tmp(handle_, n);
-    // handle_.dispatch(32, 1, 1);
     cmd_end();
   }
 
   void destroy() override;
 
-protected:
+ protected:
   void create_sync_objects();
   void create_command_pool();
   void create_command_buffer();
@@ -52,7 +52,7 @@ protected:
   void cmd_begin() const;
   void cmd_end() const;
 
-private:
+ private:
   const vkb::Device &vkb_device_;
   vk::Queue *vkh_queue_;
 
@@ -60,4 +60,4 @@ private:
   vk::Fence fence_;
 };
 
-} // namespace core
+}  // namespace core

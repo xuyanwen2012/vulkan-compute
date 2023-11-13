@@ -1,8 +1,9 @@
 #pragma once
 
+#include <cstdint>
+
 #include "buffer.hpp"
 #include "vulkan_resource.hpp"
-#include <cstdint>
 
 namespace core {
 
@@ -13,8 +14,7 @@ using WorkGroup = std::array<uint32_t, 3>;
  * pipeline for this shader, and creates the necessary components to it.
  */
 class Algorithm final : public VulkanResource<vk::ShaderModule> {
-
-public:
+ public:
   explicit Algorithm(std::shared_ptr<vk::Device> device_ptr,
                      std::string_view spirv_filename,
                      const std::vector<std::shared_ptr<Buffer>> &buffers,
@@ -36,10 +36,12 @@ public:
     this->set_push_constants(push_constants.data(), size, memory_size);
   }
 
-  void set_push_constants(const void *data, uint32_t size,
+  void set_push_constants(const void *data,
+                          uint32_t size,
                           uint32_t memory_size);
 
-  template <typename T> std::vector<T> get_push_constants() {
+  template <typename T>
+  std::vector<T> get_push_constants() {
     return {static_cast<T *>(push_constants_data_),
             static_cast<T *>(push_constants_data_) + push_constants_size_};
   }
@@ -54,25 +56,25 @@ public:
   void record_bind_core(const vk::CommandBuffer &cmd_buf) const;
 
   /**
-   * @brief Let the cmd_buffer to bind my push constants. 
+   * @brief Let the cmd_buffer to bind my push constants.
    *
    * @param cmd_buf
    */
   void record_bind_push(const vk::CommandBuffer &cmd_buf) const;
 
-  [[deprecated("Use tmp")]] void
-  record_dispatch(const vk::CommandBuffer &cmd_buf) const;
+  [[deprecated("Use tmp")]] void record_dispatch(
+      const vk::CommandBuffer &cmd_buf) const;
 
   void record_dispatch_tmp(const vk::CommandBuffer &cmd_buf,
                            uint32_t data_size) const;
 
-protected:
+ protected:
   // Basically setup the buffer, its descriptor set, binding etc.
   void create_parameters();
   void create_pipeline();
   void create_shader_module();
 
-private:
+ private:
   std::string spirv_filename_;
 
   vk::Pipeline pipeline_;
@@ -97,4 +99,4 @@ private:
   uint32_t push_constants_size_ = 0;
 };
 
-} // namespace core
+}  // namespace core

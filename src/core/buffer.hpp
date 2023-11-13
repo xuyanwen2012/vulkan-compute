@@ -1,8 +1,9 @@
 #pragma once
 
-#include <numeric>
 #include <spdlog/spdlog.h>
 #include <vk_mem_alloc.h>
+
+#include <numeric>
 #include <vulkan/vulkan.hpp>
 
 #include "vulkan_resource.hpp"
@@ -23,9 +24,10 @@ using BufferReference = std::reference_wrapper<const Buffer>;
  * shared between CPU and GPU.
  */
 class Buffer final : public VulkanResource<vk::Buffer> {
-public:
+ public:
   explicit Buffer(
-      std::shared_ptr<vk::Device> device_ptr, vk::DeviceSize size,
+      std::shared_ptr<vk::Device> device_ptr,
+      vk::DeviceSize size,
       vk::BufferUsageFlags buffer_usage =
           vk::BufferUsageFlagBits::eStorageBuffer |
           vk::BufferUsageFlagBits::eTransferDst,
@@ -58,7 +60,8 @@ public:
     std::iota(ptr, ptr + size / sizeof(float), 0.0f);
   }
 
-  void tmp_write_data(const void *data, const size_t size,
+  void tmp_write_data(const void *data,
+                      const size_t size,
                       const size_t offset = 0) const {
     spdlog::info("Writing {} bytes to buffer", size);
     std::memcpy(mapped_data_ + offset, data, size);
@@ -73,12 +76,12 @@ public:
   // The following functions provides infos for the descriptor set
   // ---------------------------------------------------------------------------
 
-  [[nodiscard]] vk::DescriptorBufferInfo
-  construct_descriptor_buffer_info() const;
+  [[nodiscard]] vk::DescriptorBufferInfo construct_descriptor_buffer_info()
+      const;
 
   void destroy() override;
 
-private:
+ private:
   VmaAllocation allocation_ = VK_NULL_HANDLE;
   vk::DeviceMemory memory_ = nullptr;
   vk::DeviceSize size_ = 0;
@@ -86,4 +89,4 @@ private:
 
   bool persistent_ = true;
 };
-} // namespace core
+}  // namespace core

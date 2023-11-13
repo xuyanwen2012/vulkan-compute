@@ -1,6 +1,7 @@
 #pragma once
 
 #include <spdlog/spdlog.h>
+
 #include <vulkan/vulkan.hpp>
 
 #include "VkBootstrap.h"
@@ -17,7 +18,7 @@ extern VmaAllocator g_allocator;
  *
  */
 class BaseEngine {
-public:
+ public:
   BaseEngine();
 
   ~BaseEngine() {
@@ -36,14 +37,14 @@ public:
   [[nodiscard]] vk::Queue &get_queue() { return queue_; }
   [[nodiscard]] const vk::Queue &get_queue() const { return queue_; }
 
-private:
+ private:
   void device_initialization();
   void get_queues();
   void vma_initialization() const;
 
-protected:
+ protected:
   vkb::Instance instance_;
   vkb::Device device_;
   vk::Queue queue_;
 };
-} // namespace core
+}  // namespace core

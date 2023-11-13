@@ -9,7 +9,8 @@ Buffer::Buffer(std::shared_ptr<vk::Device> device_ptr,
                const vk::BufferUsageFlags buffer_usage,
                const VmaMemoryUsage memory_usage,
                const VmaAllocationCreateFlags flags)
-    : VulkanResource(std::move(device_ptr)), size_(size),
+    : VulkanResource(std::move(device_ptr)),
+      size_(size),
       persistent_{(flags & VMA_ALLOCATION_CREATE_MAPPED_BIT) != 0} {
   const auto buffer_create_info =
       vk::BufferCreateInfo().setSize(size).setUsage(buffer_usage);
@@ -24,8 +25,10 @@ Buffer::Buffer(std::shared_ptr<vk::Device> device_ptr,
   if (const auto result = vmaCreateBuffer(
           g_allocator,
           reinterpret_cast<const VkBufferCreateInfo *>(&buffer_create_info),
-          &memory_info, reinterpret_cast<VkBuffer *>(&get_handle()),
-          &allocation_, &allocation_info);
+          &memory_info,
+          reinterpret_cast<VkBuffer *>(&get_handle()),
+          &allocation_,
+          &allocation_info);
       result != VK_SUCCESS) {
     throw std::runtime_error("Cannot create HPPBuffer");
   }
@@ -56,4 +59,4 @@ void Buffer::destroy() {
   }
 }
 
-} // namespace core
+}  // namespace core

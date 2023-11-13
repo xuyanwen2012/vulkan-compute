@@ -1,7 +1,8 @@
 #include "algorithm.hpp"
 
-#include "../common/shader_loader.hpp"
 #include <cstdint>
+
+#include "../common/shader_loader.hpp"
 
 // For CLSPV generated shader, need to use specialization constants to pass
 // Must need 3 uint32 at constant ID 0, 1, 2
@@ -24,10 +25,13 @@ Algorithm::Algorithm(std::shared_ptr<vk::Device> device_ptr,
                      const std::vector<std::shared_ptr<Buffer>> &buffers,
                      const uint32_t threads_per_block,
                      const std::vector<float> &push_constants)
-    : VulkanResource(std::move(device_ptr)), spirv_filename_(spirv_filename),
-      usm_buffers_(buffers), threads_per_block_(threads_per_block) {
+    : VulkanResource(std::move(device_ptr)),
+      spirv_filename_(spirv_filename),
+      usm_buffers_(buffers),
+      threads_per_block_(threads_per_block) {
   spdlog::info("YxAlgorithm ({}) initializing with number of buffers: {}",
-               spirv_filename, buffers.size());
+               spirv_filename,
+               buffers.size());
 
   set_push_constants(push_constants);
 
@@ -46,7 +50,8 @@ void Algorithm::destroy() {
   device_ptr_->destroyDescriptorPool(descriptor_pool_);
 }
 
-void Algorithm::set_push_constants(const void *data, const uint32_t size,
+void Algorithm::set_push_constants(const void *data,
+                                   const uint32_t size,
                                    const uint32_t memory_size) {
   const uint32_t total_size = size * memory_size;
 
@@ -59,18 +64,23 @@ void Algorithm::set_push_constants(const void *data, const uint32_t size,
 
 void Algorithm::record_bind_core(const vk::CommandBuffer &cmd_buf) const {
   cmd_buf.bindPipeline(vk::PipelineBindPoint::eCompute, pipeline_);
-  cmd_buf.bindDescriptorSets(vk::PipelineBindPoint::eCompute, pipeline_layout_,
-                             0, descriptor_set_, nullptr);
+  cmd_buf.bindDescriptorSets(vk::PipelineBindPoint::eCompute,
+                             pipeline_layout_,
+                             0,
+                             descriptor_set_,
+                             nullptr);
 }
 
 void Algorithm::record_bind_push(const vk::CommandBuffer &cmd_buf) const {
   spdlog::debug("YxAlgorithm::record_bind_push, constants memory size: {}",
                 push_constants_size_ * push_constants_data_type_memory_size_);
 
-  cmd_buf.pushConstants(pipeline_layout_, vk::ShaderStageFlagBits::eCompute, 0,
-                        push_constants_size_ *
-                            push_constants_data_type_memory_size_,
-                        push_constants_data_);
+  cmd_buf.pushConstants(
+      pipeline_layout_,
+      vk::ShaderStageFlagBits::eCompute,
+      0,
+      push_constants_size_ * push_constants_data_type_memory_size_,
+      push_constants_data_);
 }
 
 void Algorithm::record_dispatch(const vk::CommandBuffer &cmd_buf) const {
@@ -106,9 +116,9 @@ void Algorithm::create_parameters() {
   std::vector<vk::DescriptorSetLayoutBinding> bindings;
   bindings.reserve(usm_buffers_.size());
   for (auto i = 0u; i < usm_buffers_.size(); ++i) {
-    bindings.emplace_back(i, // Binding index
+    bindings.emplace_back(i,  // Binding index
                           vk::DescriptorType::eStorageBuffer,
-                          1, // Descriptor count
+                          1,  // Descriptor count
                           vk::ShaderStageFlagBits::eCompute);
   }
   const auto layout_create_info =
@@ -133,11 +143,11 @@ void Algorithm::create_parameters() {
 
     compute_write_descriptor_sets.emplace_back(
         descriptor_set_,
-        i, // Destination binding
-        0, // Destination array element
-        1, // Descriptor count
+        i,  // Destination binding
+        0,  // Destination array element
+        1,  // Descriptor count
         vk::DescriptorType::eStorageBuffer,
-        nullptr, // Descriptor image info
+        nullptr,  // Descriptor image info
         &buf_info);
 
     device_ptr_->updateDescriptorSets(compute_write_descriptor_sets, nullptr);
@@ -170,7 +180,7 @@ void Algorithm::create_pipeline() {
 
   const auto spec_map = clspv_default_spec_const();
   const auto spec_info = vk::SpecializationInfo()
-                             .setMapEntries(spec_map) // 3 entries, = workgroup
+                             .setMapEntries(spec_map)  // 3 entries, = workgroup
                              .setData<uint32_t>(spec_map_content);
 
   // Pipeline itself (3/3)
@@ -199,4 +209,4 @@ void Algorithm::create_shader_module() {
   handle_ = device_ptr_->createShaderModule(create_info);
 }
 
-} // namespace core
+}  // namespace core

@@ -29,7 +29,7 @@ void BaseEngine::device_initialization() {
   auto inst_ret = instance_builder.set_app_name("Example Vulkan Application")
                       .request_validation_layers()
                       .use_default_debug_messenger()
-                      .require_api_version(1, 3, 0) // for SPIR-V 1.3
+                      .require_api_version(1, 3, 0)  // for SPIR-V 1.3
                       .build();
   if (!inst_ret) {
     std::cerr << "Failed to create Vulkan instance. Error: "
@@ -90,4 +90,4 @@ void BaseEngine::vma_initialization() const {
 
   vmaCreateAllocator(&allocator_create_info, &g_allocator);
 }
-} // namespace core
+}  // namespace core
