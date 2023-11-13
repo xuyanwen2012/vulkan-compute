@@ -1,5 +1,6 @@
 #pragma once
 
+#include <numeric>
 #include <spdlog/spdlog.h>
 #include <vk_mem_alloc.h>
 #include <vulkan/vulkan.hpp>
@@ -51,6 +52,11 @@ public:
     return device_ptr_->getBufferAddressKHR(get_handle());
   }
   [[nodiscard]] vk::DeviceSize get_size() const { return size_; }
+
+  void tmp_debug_data(const size_t size, const size_t offset = 0) const {
+    auto *ptr = reinterpret_cast<float *>(mapped_data_);
+    std::iota(ptr, ptr + size / sizeof(float), 0.0f);
+  }
 
   void tmp_write_data(const void *data, const size_t size,
                       const size_t offset = 0) const {

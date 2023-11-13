@@ -37,8 +37,8 @@ public:
     cmd_begin();
     algo.record_bind_core(handle_);
     algo.record_bind_push(handle_);
-    // algo.record_dispatch_tmp(handle_, n);
-    handle_.dispatch(4, 1, 1);
+    algo.record_dispatch_tmp(handle_, n);
+    // handle_.dispatch(32, 1, 1);
     cmd_end();
   }
 

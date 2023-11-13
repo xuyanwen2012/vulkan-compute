@@ -28,6 +28,12 @@ public:
 
   void destroy();
 
+  /**
+   * @brief It sucks, but this function takes the N*sizeof(T)
+   *
+   * @param size
+   * @return std::shared_ptr<Buffer>
+   */
   [[nodiscard]] std::shared_ptr<Buffer> yx_buffer(vk::DeviceSize size) {
     auto buf = std::make_shared<Buffer>(get_device_ptr(), size);
     if (manage_resources_) {

@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iostream>
 #include <random>
+#include <spdlog/common.h>
 #include <vector>
 
 #define GLM_FORCE_RADIANS
@@ -25,7 +26,7 @@ int main(int argc, char **argv) {
 #if defined(NDEBUG)
   spdlog::set_level(spdlog::level::off);
 #else
-  spdlog::set_level(spdlog::level::trace);
+  spdlog::set_level(spdlog::level::debug);
 #endif
 
   constexpr auto min_coord = 0.0f;
@@ -41,10 +42,11 @@ int main(int argc, char **argv) {
   // Computation start here
   core::ComputeEngine engine{};
 
-  const auto in_buf = engine.yx_buffer(n);
-  const auto out_but = engine.yx_buffer(n);
+  const auto in_buf = engine.yx_buffer(in_data.size() * sizeof(float));
+  const auto out_but = engine.yx_buffer(in_data.size() * sizeof(float));
 
-  in_buf->tmp_write_data(in_data.data(), in_data.size() * sizeof(float));
+  // in_buf->tmp_write_data(in_data.data(), in_data.size() * sizeof(float));
+  in_buf->tmp_debug_data(in_data.size() * sizeof(float));
   out_but->tmp_fill_zero(in_data.size() * sizeof(float));
 
   std::vector params{in_buf, out_but};
@@ -68,9 +70,10 @@ int main(int argc, char **argv) {
   // seq->launch_kernel_async();
   // seq->sync();
 
-  const auto o = reinterpret_cast<const float *>(out_but->get_data());
+  const auto in = reinterpret_cast<const float *>(in_buf->get_data());
+  const auto out = reinterpret_cast<const float *>(out_but->get_data());
   for (int i = 0; i < n; ++i) {
-    std::cout << i << ":\t" << in_data[i] << "\t-\t" << o[i] << std::endl;
+    std::cout << i << ":\t" << in[i] << "\t-\t" << out[i] << std::endl;
   }
 
   std::cout << "Done!" << std::endl;
