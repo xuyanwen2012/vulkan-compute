@@ -9,7 +9,7 @@
 namespace fs = std::filesystem;
 
 [[nodiscard]] inline std::vector<uint32_t>
-file_reader(const std::string &filename) {
+load_shader_from_file(const std::string &filename) {
 
   fs::path shaderPath = fs::current_path() / filename;
   spdlog::info("loading shader path: {}", shaderPath.string());
@@ -35,8 +35,7 @@ file_reader(const std::string &filename) {
   file.close();
 
   if (file.fail()) {
-    std::cerr << "Failed to read file: " << filename << std::endl;
-    return {};
+    throw std::runtime_error("Failed to read file: " + shaderPath.string());
   }
 
   return buffer;

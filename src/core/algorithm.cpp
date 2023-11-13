@@ -1,6 +1,6 @@
 #include "algorithm.hpp"
 
-#include "../common/file_reader.hpp"
+#include "../common/shader_loader.hpp"
 #include <cstdint>
 
 // For CLSPV generated shader, need to use specialization constants to pass
@@ -193,8 +193,7 @@ void Algorithm::create_shader_module() {
   // auto &shader_code = float_doubler_spv;
   // const std::vector spirv_binary(shader_code,
   //                                shader_code + std::size(shader_code));
-
-  const auto spirv_binary = file_reader(spirv_filename_);
+  const auto spirv_binary = load_shader_from_file(spirv_filename_);
 
   const auto create_info = vk::ShaderModuleCreateInfo().setCode(spirv_binary);
   handle_ = device_ptr_->createShaderModule(create_info);
