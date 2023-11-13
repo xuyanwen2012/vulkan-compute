@@ -1,7 +1,5 @@
 #include "buffer.hpp"
 
-#include "base_engine.hpp"
-
 namespace core {
 
 Buffer::Buffer(std::shared_ptr<vk::Device> device_ptr,
