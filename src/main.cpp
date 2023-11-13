@@ -1,5 +1,6 @@
 #include <CLI/CLI.hpp>
 #include <algorithm>
+#include <cstdlib>
 #include <iostream>
 #include <random>
 #include <vector>
@@ -7,13 +8,8 @@
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 
-#include "core/buffer.hpp"
 #include "core/engine.hpp"
 #include "spdlog/spdlog.h"
-
-// namespace core {
-// VmaAllocator g_allocator;
-// }
 
 [[nodiscard]] std::ostream &operator<<(std::ostream &os, const glm::vec3 &v) {
   os << "(" << v.x << ", " << v.y << ", " << v.z << ")";
@@ -23,7 +19,12 @@
 int main(int argc, char **argv) {
   CLI::App app{"Vulkan Compute Example"};
 
-  std::string log_level = "info";  // Default log level
+// Default log level
+#if defined(NDEBUG)
+  std::string log_level = "off";
+#else
+  std::string log_level = "debug";
+#endif
 
   app.add_option(
       "-l,--log-level",
@@ -35,7 +36,9 @@ int main(int argc, char **argv) {
   std::ranges::transform(log_level, log_level.begin(), ::tolower);
 
   spdlog::level::level_enum spd_log_level;
-  if (log_level == "trace") {
+  if (log_level == "off") {
+    spd_log_level = spdlog::level::off;
+  } else if (log_level == "trace") {
     spd_log_level = spdlog::level::trace;
   } else if (log_level == "debug") {
     spd_log_level = spdlog::level::debug;
@@ -50,16 +53,10 @@ int main(int argc, char **argv) {
   } else {
     // Handle invalid log level input
     std::cerr << "Invalid log level: " << log_level << std::endl;
-    return 1;
+    return EXIT_FAILURE;
   }
 
   spdlog::set_level(spd_log_level);
-
-  // #if defined(NDEBUG)
-  //   spdlog::set_level(spdlog::level::off);
-  // #else
-  //   spdlog::set_level(spdlog::level::debug);
-  // #endif
 
   constexpr auto min_coord = 0.0f;
   constexpr auto max_coord = 1024.0f;
@@ -77,8 +74,8 @@ int main(int argc, char **argv) {
   const auto in_buf = engine.buffer(in_data.size() * sizeof(float));
   const auto out_but = engine.buffer(in_data.size() * sizeof(float));
 
-  // in_buf->tmp_write_data(in_data.data(), in_data.size() * sizeof(float));
-  in_buf->tmp_debug_data(in_data.size() * sizeof(float));
+  in_buf->tmp_write_data(in_data.data(), in_data.size() * sizeof(float));
+  // in_buf->tmp_debug_data(in_data.size() * sizeof(float));
   out_but->tmp_fill_zero(in_data.size() * sizeof(float));
 
   std::vector params{in_buf, out_but};
