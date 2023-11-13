@@ -5,8 +5,10 @@
 #include "../common/shader_loader.hpp"
 
 // For CLSPV generated shader, need to use specialization constants to pass
-// Must need 3 uint32 at constant ID 0, 1, 2
-// I am hard coding the first three specialized entry right now
+// Must need 3 uint32 at constant ID 0, 1, 2. The vaule of them is the workgroup
+// size. i.e., the number of threads you want the shader to launch with.
+//
+// I am hard coding the first three specialized entry right now.
 [[nodiscard]] constexpr auto clspv_default_spec_const() {
   std::array<vk::SpecializationMapEntry, 3> spec_const;
   for (int i = 0; i < 3; ++i) {
@@ -81,16 +83,6 @@ void Algorithm::record_bind_push(const vk::CommandBuffer &cmd_buf) const {
       0,
       push_constants_size_ * push_constants_data_type_memory_size_,
       push_constants_data_);
-}
-
-void Algorithm::record_dispatch(const vk::CommandBuffer &cmd_buf) const {
-  // spdlog::debug("YxAlgorithm::record_dispatch, workgroup_x: {}",
-  // workgroup_[0]);
-  // cmd_buf.dispatch(workgroup_[0], workgroup_[1], workgroup_[2]);
-
-  // TODO: decide number of blocks
-  // Need input size
-  // cmd_buf.dispatch(n, 1, 1);
 }
 
 void Algorithm::record_dispatch_tmp(const vk::CommandBuffer &cmd_buf,
@@ -200,9 +192,6 @@ void Algorithm::create_pipeline() {
 }
 
 void Algorithm::create_shader_module() {
-  // auto &shader_code = float_doubler_spv;
-  // const std::vector spirv_binary(shader_code,
-  //                                shader_code + std::size(shader_code));
   const auto spirv_binary = load_shader_from_file(spirv_filename_);
 
   const auto create_info = vk::ShaderModuleCreateInfo().setCode(spirv_binary);
