@@ -18,6 +18,12 @@
   return os;
 }
 
+// typename T = float,
+template <typename... Args>
+[[nodiscard]] std::vector<float> make_clspv_push_const(Args &&...args) {
+  return {0.0f, 0.0f, 0.0f, std::forward<Args>(args)...};
+}
+
 int main(int argc, char **argv) {
   CLI::App app{"Vulkan Compute Example"};
 
