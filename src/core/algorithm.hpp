@@ -2,6 +2,7 @@
 
 #include "buffer.hpp"
 #include "vulkan_resource.hpp"
+#include <cstdint>
 
 namespace core {
 
@@ -14,19 +15,16 @@ using WorkGroup = std::array<uint32_t, 3>;
 class Algorithm final : public VulkanResource<vk::ShaderModule> {
 
 public:
-  explicit Algorithm(const std::shared_ptr<vk::Device> &device_ptr,
+  explicit Algorithm(std::shared_ptr<vk::Device> device_ptr,
                      std::string_view spirv_filename,
-                     const std::vector<std::shared_ptr<Buffer>> &buffers = {},
-                     const WorkGroup &workgroup_size = {},
+                     const std::vector<std::shared_ptr<Buffer>> &buffers,
+                     uint32_t threads_per_block,
                      const std::vector<float> &push_constants = {});
 
   ~Algorithm() override {
     spdlog::debug("YxAlgorithm::~YxAlgorithm");
     destroy();
   }
-
-  void rebuild(const WorkGroup &workgroup_size,
-               const std::vector<float> &push_constants);
 
   void destroy() override;
 
@@ -41,19 +39,32 @@ public:
   void set_push_constants(const void *data, uint32_t size,
                           uint32_t memory_size);
 
-  void set_workgroup_size(const WorkGroup &workgroup_size) {
-    workgroup_size_ = workgroup_size;
-  }
-
   template <typename T> std::vector<T> get_push_constants() {
     return {static_cast<T *>(push_constants_data_),
             static_cast<T *>(push_constants_data_) + push_constants_size_};
   }
 
-  // Provided for sequence(cmd buffer)
+  // Used by Sequence (cmd buffer)
+
+  /**
+   * @brief Let the cmd_buffer to bind my pipeline and descriptor set
+   *
+   * @param cmd_buf
+   */
   void record_bind_core(const vk::CommandBuffer &cmd_buf) const;
+
+  /**
+   * @brief Let the cmd_buffer to bind my push constants. 
+   *
+   * @param cmd_buf
+   */
   void record_bind_push(const vk::CommandBuffer &cmd_buf) const;
-  void record_dispatch(const vk::CommandBuffer &cmd_buf) const;
+
+  [[deprecated("Use tmp")]] void
+  record_dispatch(const vk::CommandBuffer &cmd_buf) const;
+
+  void record_dispatch_tmp(const vk::CommandBuffer &cmd_buf,
+                           uint32_t data_size) const;
 
 protected:
   // Basically setup the buffer, its descriptor set, binding etc.
@@ -73,7 +84,10 @@ private:
 
   // In CUDA terms, this is the number threads per block
   // or work-items per work-group
-  WorkGroup workgroup_size_;
+  // WorkGroup workgroup_size_;
+
+  // uint32_t
+  uint32_t threads_per_block_;
 
   std::vector<std::shared_ptr<Buffer>> usm_buffers_;
 

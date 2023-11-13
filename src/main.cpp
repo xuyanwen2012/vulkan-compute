@@ -49,18 +49,24 @@ int main(int argc, char **argv) {
 
   std::vector params{in_buf, out_but};
 
-  // I still want to know what workgroup means
-  // std::array<uint32_t, 3> workgroup{core::num_blocks(n, 256), 1, 1};
-  core::WorkGroup workgroup_size{32, 1, 1};
+  uint32_t threads_per_block = 256;
 
   std::vector<float> push_const{0, 0, 0, 0, n};
-  const auto algo =
-      engine.yx_algorithm("float_doubler", params, workgroup_size, push_const);
+  const auto algo = engine.yx_algorithm("float_doubler.spv", params,
+                                        threads_per_block, push_const);
 
   const auto seq = engine.yx_sequence();
-  seq->record(*algo);
+
+  seq->simple_record_commands(*algo, n);
   seq->launch_kernel_async();
+
+  // ... do something else
+
   seq->sync();
+
+  // seq->record(*algo);
+  // seq->launch_kernel_async();
+  // seq->sync();
 
   const auto o = reinterpret_cast<const float *>(out_but->get_data());
   for (int i = 0; i < n; ++i) {

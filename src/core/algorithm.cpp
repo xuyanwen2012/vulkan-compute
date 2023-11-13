@@ -1,6 +1,7 @@
 #include "algorithm.hpp"
 
-#include "../../shaders/all_shaders.hpp"
+#include "../common/file_reader.hpp"
+#include <cstdint>
 
 // For CLSPV generated shader, need to use specialization constants to pass
 // Must need 3 uint32 at constant ID 0, 1, 2
@@ -18,42 +19,17 @@
 
 namespace core {
 
-Algorithm::Algorithm(const std::shared_ptr<vk::Device> &device_ptr,
+Algorithm::Algorithm(std::shared_ptr<vk::Device> device_ptr,
                      const std::string_view spirv_filename,
                      const std::vector<std::shared_ptr<Buffer>> &buffers,
-                     const WorkGroup &workgroup_size,
+                     const uint32_t threads_per_block,
                      const std::vector<float> &push_constants)
-    : VulkanResource(device_ptr), spirv_filename_(spirv_filename),
-      usm_buffers_(buffers) {
-  if (!buffers.empty()) {
-    spdlog::info("YxAlgorithm ({}) initializing with tensor size: {}",
-                 spirv_filename, buffers.size());
-    rebuild(workgroup_size, push_constants);
-  } else {
-    spdlog::error("YxAlgorithm ({}) initializing with empty tensor",
-                  spirv_filename);
-  }
-}
+    : VulkanResource(std::move(device_ptr)), spirv_filename_(spirv_filename),
+      usm_buffers_(buffers), threads_per_block_(threads_per_block) {
+  spdlog::info("YxAlgorithm ({}) initializing with number of buffers: {}",
+               spirv_filename, buffers.size());
 
-void Algorithm::rebuild(const WorkGroup &workgroup_size,
-                        const std::vector<float> &push_constants) {
-  spdlog::debug("YxAlgorithm::rebuild, workgroup_x: {}, pushConstants: {}",
-                workgroup_size[0], push_constants.size());
-
-  if (!push_constants.empty()) {
-    if (push_constants_data_) {
-      free(push_constants_data_);
-    }
-    constexpr uint32_t memory_size = sizeof(decltype(push_constants.back()));
-    const uint32_t size = push_constants.size();
-    const uint32_t total_size = size * memory_size;
-    push_constants_data_ = malloc(total_size);
-    std::memcpy(push_constants_data_, push_constants.data(), total_size);
-    push_constants_data_type_memory_size_ = memory_size;
-    push_constants_size_ = size;
-  }
-
-  set_workgroup_size(workgroup_size);
+  set_push_constants(push_constants);
 
   create_shader_module();
   create_parameters();
@@ -72,20 +48,11 @@ void Algorithm::destroy() {
 
 void Algorithm::set_push_constants(const void *data, const uint32_t size,
                                    const uint32_t memory_size) {
-  const uint32_t total_size = memory_size * size;
-
-  if (const uint32_t previous_total_size =
-          push_constants_size_ * push_constants_data_type_memory_size_;
-      total_size != previous_total_size) {
-    spdlog::warn("totalSize != previousTotalSize");
-  }
-
-  if (push_constants_data_) {
-    free(push_constants_data_);
-  }
+  const uint32_t total_size = size * memory_size;
 
   push_constants_data_ = malloc(total_size);
-  memcpy(push_constants_data_, data, total_size);
+  std::memcpy(push_constants_data_, data, total_size);
+
   push_constants_data_type_memory_size_ = memory_size;
   push_constants_size_ = size;
 }
@@ -113,7 +80,15 @@ void Algorithm::record_dispatch(const vk::CommandBuffer &cmd_buf) const {
 
   // TODO: decide number of blocks
   // Need input size
-  cmd_buf.dispatch(2, 1, 1);
+  // cmd_buf.dispatch(n, 1, 1);
+}
+
+void Algorithm::record_dispatch_tmp(const vk::CommandBuffer &cmd_buf,
+                                    const uint32_t data_size) const {
+  const auto num_blocks =
+      (data_size + threads_per_block_ - 1u) / threads_per_block_;
+  spdlog::info("YxAlgorithm::record_dispatch_tmp, num_blocks: {}", num_blocks);
+  cmd_buf.dispatch(num_blocks, 1u, 1u);
 }
 
 void Algorithm::create_parameters() {
@@ -183,23 +158,22 @@ void Algorithm::create_pipeline() {
                                       .setSetLayouts(descriptor_set_layout_)
                                       .setPushConstantRangeCount(1)
                                       .setPushConstantRanges(push_const);
+
   pipeline_layout_ = device_ptr_->createPipelineLayout(layout_create_info);
 
   // Pipeline cache (2.5/3)
   constexpr auto pipeline_cache_info = vk::PipelineCacheCreateInfo();
   pipeline_cache_ = device_ptr_->createPipelineCache(pipeline_cache_info);
 
-  // Pipeline itself (3/3)
+  // Specialization info (2.75/3) telling the shader the workgroup size
+  const std::array spec_map_content{threads_per_block_, 1u, 1u};
+
   const auto spec_map = clspv_default_spec_const();
-
-  // I think this workgroup is telling the shader how many blocks to run?
-  const std::array spec_map_content{workgroup_size_[0], workgroup_size_[1],
-                                    workgroup_size_[2]};
-
   const auto spec_info = vk::SpecializationInfo()
                              .setMapEntries(spec_map) // 3 entries, = workgroup
                              .setData<uint32_t>(spec_map_content);
 
+  // Pipeline itself (3/3)
   const auto shader_stage_create_info =
       vk::PipelineShaderStageCreateInfo()
           .setStage(vk::ShaderStageFlagBits::eCompute)
@@ -211,28 +185,19 @@ void Algorithm::create_pipeline() {
                                .setStage(shader_stage_create_info)
                                .setLayout(pipeline_layout_);
 
-#ifdef CREATE_PIPELINE_RESULT_VALUE
-  const auto pipeline_result =
-      device_ptr_->createComputePipeline(pipeline_cache_, create_info);
-  if (pipeline_result.result != vk::Result::eSuccess) {
-    throw std::runtime_error("Cannot create compute pipeline");
-  }
-  pipeline_ = pipeline_result.value;
-#else
   pipeline_ =
       device_ptr_->createComputePipeline(pipeline_cache_, create_info).value;
-#endif
 }
 
 void Algorithm::create_shader_module() {
-  //  ------
-  auto &shader_code = float_doubler_spv;
-  // ------
+  // auto &shader_code = float_doubler_spv;
+  // const std::vector spirv_binary(shader_code,
+  //                                shader_code + std::size(shader_code));
 
-  const std::vector spirv_binary(shader_code,
-                                 shader_code + std::size(shader_code));
+  const auto spirv_binary = file_reader(spirv_filename_);
 
   const auto create_info = vk::ShaderModuleCreateInfo().setCode(spirv_binary);
   handle_ = device_ptr_->createShaderModule(create_info);
 }
+
 } // namespace core

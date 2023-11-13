@@ -22,9 +22,20 @@ if is_mode("release") then
     set_optimize("fastest")
 end
 
--- before_build(function (target) 
---     os.exec("./compile_shaders.sh")
--- end)
+before_build(function (target) 
+    os.exec("./compile_shaders.sh")
+end)
+
+after_build(function (target) 
+    build_path = ""
+    if is_mode("release") then
+        build_path = "$(buildir)/linux/x86_64/release/"
+    else
+        build_path = "$(buildir)/linux/x86_64/debug/"
+    end
+    os.cp("shaders/compiled_shaders/**.spv", build_path)
+    print("Copied compiled shaders to " .. build_path)
+end)
 
 target("vulkan-compute")
     set_default(true)

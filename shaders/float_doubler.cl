@@ -1,8 +1,8 @@
 // clang-format off
 
-// RUN: clspv --spv-version=1.5 --cl-std=CLC++ -inline-entry-points float_doubler.cl -o float_doubler.spv
+// RUN: clspv --spv-version=1.5 --cl-std=CLC++ -inline-entry-points float_doubler.cl -o compiled_shaders/float_doubler.spv
 // 
-// RUN: clspv-reflection --target-env spv1.5 float_doubler.spv
+// RUN: clspv-reflection --target-env spv1.5 compiled_shaders/float_doubler.spv
 //
 // .cinit --output-format=c
 

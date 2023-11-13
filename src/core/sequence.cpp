@@ -8,29 +8,34 @@
 namespace core {
 
 void Sequence::record(const Algorithm &algo) const {
-  begin();
+  cmd_begin();
   algo.record_bind_core(handle_);
   algo.record_bind_push(handle_);
-  algo.record_dispatch(handle_);
-  end();
+
+  // usm_buffers_
+  // algo.record_dispatch(handle_);
+  // algo.record_dispatch_tmp(handle_);
+  cmd_end();
 }
 
-void Sequence::begin() const {
+void Sequence::cmd_begin() const {
   spdlog::debug("Sequence::begin!");
   constexpr auto info = vk::CommandBufferBeginInfo().setFlags(
       vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
   handle_.begin(info);
 }
 
-void Sequence::end() const {
+void Sequence::cmd_end() const {
   spdlog::debug("Sequence::end!");
   handle_.end();
 }
 
 void Sequence::launch_kernel_async() {
   spdlog::debug("Sequence::launch_kernel_async");
+
   const auto submit_info = vk::SubmitInfo().setCommandBuffers(handle_);
   assert(vkh_queue_ != nullptr);
+
   vkh_queue_->submit(submit_info, fence_);
 }
 

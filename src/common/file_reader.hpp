@@ -1,20 +1,30 @@
 #pragma once
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <spdlog/spdlog.h>
 #include <vector>
+
+namespace fs = std::filesystem;
 
 [[nodiscard]] inline std::vector<uint32_t>
 file_reader(const std::string &filename) {
-  // Open the file in binary mode
+
+  fs::path shaderPath = fs::current_path() / filename;
+  spdlog::info("loading shader path: {}", shaderPath.string());
+
+  if (!fs::exists(shaderPath)) {
+    throw std::runtime_error("Shader file not found: " + shaderPath.string());
+  }
+
+  // Open the shader file
   std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
   if (!file.is_open()) {
-    std::cerr << "Failed to open file: " << filename << std::endl;
-    return {};
+    throw std::runtime_error("Failed to open file: " + shaderPath.string());
   }
 
-  // Get the file size
   size_t file_size = static_cast<size_t>(file.tellg());
 
   // Read the file into a vector

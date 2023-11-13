@@ -1,8 +1,8 @@
 // clang-format off
 
-// RUN: clspv --spv-version=1.5 --cl-std=CLC++ -inline-entry-points morton.cl -o morton.spv
+// RUN: clspv --spv-version=1.5 --cl-std=CLC++ -inline-entry-points morton.cl -o compiled_shaders/morton.spv
 // 
-// RUN: clspv-reflection --target-env spv1.5 morton.spv
+// RUN: clspv-reflection --target-env spv1.5 compiled_shaders/morton.spv
 
 // clang-format on
 
