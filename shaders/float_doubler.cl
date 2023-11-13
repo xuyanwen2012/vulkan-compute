@@ -10,8 +10,7 @@
 
 __kernel void foo(__global float *in, __global float *out, const uint n) {
   uint index = get_global_id(0);
-  if (index >= n)
-    return;
+  if (index >= n) return;
 
   out[index] = in[index] * 2.0f;
 }
