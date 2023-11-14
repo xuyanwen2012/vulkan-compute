@@ -11,17 +11,12 @@
 #include <glm/glm.hpp>
 
 #include "core/engine.hpp"
+#include "helpers.hpp"
 #include "spdlog/spdlog.h"
 
 [[nodiscard]] std::ostream &operator<<(std::ostream &os, const glm::vec4 &v) {
   os << "(" << v.x << ", " << v.y << ", " << v.z << ")";
   return os;
-}
-
-// typename T = float,
-template <typename... Args>
-[[nodiscard]] std::vector<float> make_clspv_push_const(Args &&...args) {
-  return {0.0f, 0.0f, 0.0f, std::forward<Args>(args)...};
 }
 
 int main(int argc, char **argv) {
@@ -137,7 +132,10 @@ int main(int argc, char **argv) {
 
     uint32_t threads_per_block = 256;
 
-    std::vector<float> push_const{0, 0, 0, 0, n, min_coord, range};
+    // std::vector<float> push_const{0, 0, 0, 0, n, min_coord, range};
+    // auto a = {n, min_coord, range};
+
+    auto push_const = make_clspv_push_const(n, min_coord, range);
     const auto algo =
         engine.algorithm("morton32.spv", params, threads_per_block, push_const);
 

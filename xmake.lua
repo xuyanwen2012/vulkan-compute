@@ -37,7 +37,7 @@ after_build(function (target)
     print("Copied compiled shaders to " .. build_path)
 end)
 
-target("vulkan-compute")
+target("app")
     set_default(true)
     set_kind("binary")
     add_files("src/*.cpp", "src/core/*.cpp")
