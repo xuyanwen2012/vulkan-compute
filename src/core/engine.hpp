@@ -8,6 +8,10 @@
 #include "buffer.hpp"
 #include "sequence.hpp"
 
+template <typename T, typename... Args>
+concept EngineComponentArgsMatch =
+    std::is_constructible_v<T, std::shared_ptr<vk::Device>, Args...>;
+
 namespace core {
 
 /**
@@ -50,8 +54,22 @@ class ComputeEngine : public BaseEngine {
     return seq;
   }
 
+  /**
+   * @brief Creates a new instance of the Algorithm class with the given
+   * arguments.
+   *
+   * @tparam Args The types of the arguments to pass to the Algorithm
+   * constructor.
+   * @param args The arguments to pass to the Algorithm constructor.
+   * @return std::shared_ptr<Algorithm> A shared pointer to the newly created
+   * Algorithm instance.
+   * @throws std::invalid_argument if the given arguments do not match the
+   * required EngineComponentArgs for Algorithm.
+   */
   template <typename... Args>
-  [[nodiscard]] std::shared_ptr<Algorithm> algorithm(Args &&...args) {
+  [[nodiscard]] auto algorithm(Args &&...args) -> std::shared_ptr<Algorithm>
+    requires EngineComponentArgsMatch<Algorithm, Args...>
+  {
     auto algo = std::make_shared<Algorithm>(get_device_ptr(),
                                             std::forward<Args>(args)...);
     if (manage_resources_) {
