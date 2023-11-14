@@ -167,7 +167,10 @@ int main(int argc, char **argv) {
     const auto in_buf = engine.buffer(n * sizeof(InputT));
     const auto out_but = engine.buffer(n * sizeof(OutputT));
 
-    std::vector<InputT> in_data(n, 666);
+    std::vector<InputT> in_data(n);
+    std::iota(in_data.begin(), in_data.end(), 0);
+    std::reverse(in_data.begin(), in_data.end());
+
     in_buf->tmp_write_data(in_data.data(), n * sizeof(InputT));
     out_but->tmp_fill_zero(n * sizeof(OutputT));
 
@@ -175,12 +178,20 @@ int main(int argc, char **argv) {
 
     uint32_t threads_per_block = 256;
 
+    // "a.spv", params, threads_per_block, std::vector{0.0f});
     const auto algo = engine.algorithm(
-        "radix_sort.spv", params, threads_per_block, make_clspv_push_const(n));
+        "tmp_sort.spv", params, threads_per_block, std::vector<float>{256});
+    // "radix_sort.spv", params, threads_per_block, make_clspv_push_const(n));
 
     const auto seq = engine.sequence();
 
-    seq->simple_record_commands(*algo, n);
+    // seq->simple_record_commands(*algo, n);
+    seq->cmd_begin();
+    algo->record_bind_core(seq->get_handle());
+    algo->record_bind_push(seq->get_handle());
+    algo->record_dispatch_tmp(seq->get_handle(), 256);
+    seq->cmd_end();
+
     seq->launch_kernel_async();
 
     // ... do something else
@@ -190,7 +201,7 @@ int main(int argc, char **argv) {
     // Show results
     const auto in = reinterpret_cast<const InputT *>(in_buf->get_data());
     const auto out = reinterpret_cast<const OutputT *>(out_but->get_data());
-    for (int i = 0; i < n; ++i) {
+    for (int i = 0; i < 256; ++i) {
       std::cout << i << ":\t" << in[i] << "\t-\t" << out[i] << std::endl;
     }
   }

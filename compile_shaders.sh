@@ -14,7 +14,8 @@ for cl_file in "$shader_dir"/*.cl; do
         spv_output="$shader_dir/compiled_shaders/${file_name}.spv"
 
         # Run clspv command for the current file
-        clspv --spv-version=1.5 --cl-std=CLC++ -inline-entry-points "$cl_file" -o "$spv_output"
+        clspv -w -O0 --spv-version=1.5 --cl-std=CLC++ -inline-entry-points "$cl_file" -o "$spv_output"
+        # --spv-version=1.3 
 
         if [ $? -eq 0 ]; then
             echo "Converted $cl_file to $spv_output"

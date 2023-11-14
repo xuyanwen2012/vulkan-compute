@@ -42,6 +42,9 @@ class Sequence final : public VulkanResource<vk::CommandBuffer> {
   //             Operations you can do w/ the command buffer
   // ---------------------------------------------------------------------------
 
+  void cmd_begin() const;
+  void cmd_end() const;
+
   /**
    * @brief Record the commands of an Algorithm. It will bind pipeline, push
    * constants, and dispatch.
@@ -78,9 +81,6 @@ class Sequence final : public VulkanResource<vk::CommandBuffer> {
   void create_sync_objects();
   void create_command_pool();
   void create_command_buffer();
-
-  void cmd_begin() const;
-  void cmd_end() const;
 
  private:
   // Vulkan components

@@ -176,12 +176,14 @@ void Algorithm::create_pipeline() {
                              .setMapEntries(spec_map)  // 3 entries, = workgroup
                              .setData<uint32_t>(spec_map_content);
 
+  // const auto spec_info = vk::SpecializationInfo();
+
   // Pipeline itself (3/3)
   const auto shader_stage_create_info =
       vk::PipelineShaderStageCreateInfo()
           .setStage(vk::ShaderStageFlagBits::eCompute)
           .setModule(handle_)
-          .setPName("foo")
+          .setPName("main")
           .setPSpecializationInfo(&spec_info);
 
   const auto create_info = vk::ComputePipelineCreateInfo()
@@ -194,7 +196,6 @@ void Algorithm::create_pipeline() {
 
 void Algorithm::create_shader_module() {
   const auto spirv_binary = load_shader_from_file(spirv_filename_);
-
   const auto create_info = vk::ShaderModuleCreateInfo().setCode(spirv_binary);
   handle_ = device_ptr_->createShaderModule(create_info);
 }
