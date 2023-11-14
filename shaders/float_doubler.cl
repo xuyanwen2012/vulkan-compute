@@ -4,7 +4,6 @@
 // 
 // RUN: clspv-reflection --target-env spv1.5 compiled_shaders/float_doubler.spv
 //
-// .cinit --output-format=c
 
 // clang-format on
 

@@ -80,9 +80,10 @@ class Buffer final : public VulkanResource<vk::Buffer> {
   //              Methods for manipulating data in the buffer
   // ---------------------------------------------------------------------------
 
+  template <typename T>
   void tmp_debug_data(const size_t size, const size_t offset = 0) const {
-    auto *ptr = reinterpret_cast<float *>(mapped_data_ + offset);
-    std::iota(ptr, ptr + size / sizeof(float), 0.0f);
+    auto *ptr = reinterpret_cast<T *>(mapped_data_ + offset);
+    std::iota(ptr, ptr + size / sizeof(T), T());
   }
 
   void tmp_write_data(const void *data,
