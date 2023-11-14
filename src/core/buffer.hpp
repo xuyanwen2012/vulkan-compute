@@ -16,11 +16,11 @@ using BufferReference = std::reference_wrapper<const Buffer>;
 
 /**
  * @brief Buffer class is an abstraction of data, in the sense of a block of
- * memory that will be processes by the GPU. It is a warpper of Vulkan buffer
+ * memory that will be processes by the GPU. It is a wrapper of Vulkan buffer
  * managed by Vulkan Memory Allocator (VMA).
  *
  * I provide some default flags for the buffer usage and memory usage. I wanted
- * to use the unified shared memory (USM), for intergrated GPUs. The data is
+ * to use the unified shared memory (USM), for integrated GPUs. The data is
  * shared between CPU and GPU.
  */
 class Buffer final : public VulkanResource<vk::Buffer> {
@@ -68,7 +68,7 @@ class Buffer final : public VulkanResource<vk::Buffer> {
   [[nodiscard]] VmaAllocation get_allocation() const { return allocation_; }
 
   [[nodiscard]] const std::byte *get_data() const { return mapped_data_; }
-  [[nodiscard]] std::byte *get_data_mut() { return mapped_data_; }
+  [[nodiscard]] std::byte *get_data_mut() const { return mapped_data_; }
 
   [[nodiscard]] vk::DeviceMemory get_memory() const { return memory_; }
   [[nodiscard, maybe_unused]] vk::DeviceAddress get_device_address() const {
@@ -81,7 +81,7 @@ class Buffer final : public VulkanResource<vk::Buffer> {
   // ---------------------------------------------------------------------------
 
   void tmp_debug_data(const size_t size, const size_t offset = 0) const {
-    auto *ptr = reinterpret_cast<float *>(mapped_data_);
+    auto *ptr = reinterpret_cast<float *>(mapped_data_ + offset);
     std::iota(ptr, ptr + size / sizeof(float), 0.0f);
   }
 

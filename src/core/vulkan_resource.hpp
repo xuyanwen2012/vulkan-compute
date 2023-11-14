@@ -1,7 +1,5 @@
 #pragma once
 
-#include <spdlog/spdlog.h>
-
 #include <memory>
 #include <vulkan/vulkan.hpp>
 

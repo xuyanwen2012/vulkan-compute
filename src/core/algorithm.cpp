@@ -5,7 +5,7 @@
 #include "../common/shader_loader.hpp"
 
 // For CLSPV generated shader, need to use specialization constants to pass
-// Must need 3 uint32 at constant ID 0, 1, 2. The vaule of them is the workgroup
+// Must need 3 uint32 at constant ID 0, 1, 2. The value of them is the workgroup
 // size. i.e., the number of threads you want the shader to launch with.
 //
 // I am hard coding the first three specialized entry right now.
@@ -29,8 +29,8 @@ Algorithm::Algorithm(std::shared_ptr<vk::Device> device_ptr,
                      const std::vector<float> &push_constants)
     : VulkanResource(std::move(device_ptr)),
       spirv_filename_(spirv_filename),
-      usm_buffers_(buffers),
-      threads_per_block_(threads_per_block) {
+      threads_per_block_(threads_per_block),
+      usm_buffers_(buffers) {
   spdlog::info("YxAlgorithm ({}) initializing with number of buffers: {}",
                spirv_filename,
                buffers.size());

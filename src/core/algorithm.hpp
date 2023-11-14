@@ -40,7 +40,7 @@ class Algorithm final : public VulkanResource<vk::ShaderModule> {
    * to pass a vector of push constants. Just a nice wrapper of the other
    * function.
    *
-   * @tparam T The type of the push constant (usuallly uint32_t or float).
+   * @tparam T The type of the push constant (usually uint32_t or float).
    * @param push_constants The vector of push constants.
    */
   template <typename T>
@@ -114,12 +114,12 @@ class Algorithm final : public VulkanResource<vk::ShaderModule> {
 
   /**
    * @brief In CUDA terms, this is the number threads per block. It is used to
-   * descript work-items per work-group.
+   * describe work-items per work-group.
    */
   uint32_t threads_per_block_;
 
   /**
-   * @brief All the buffers that are used by this algorithm. It is corsponding
+   * @brief All the buffers that are used by this algorithm. It is corresponding
    * to the GPU kernel's arguments. Note, they might have different type, sizes,
    * but in the buffer class, it stores the raw data.
    *
