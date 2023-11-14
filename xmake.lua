@@ -34,11 +34,12 @@ end
 after_build(
     function(target)
         platform = os.host()
+        arch = os.arch()
         build_path = ""
         if is_mode("release") then
-            build_path = "$(buildir)/" .. platform .. "/x86_64/release/"
+            build_path = "$(buildir)/" .. platform .. "/" .. arch .. "/release/"
         else
-            build_path = "$(buildir)/" .. platform .. "/x86_64/debug/"
+            build_path = "$(buildir)/" .. platform .. "/" .. arch .. "/debug/"
         end
         os.cp("shaders/compiled_shaders/**.spv", build_path)
         print("Copied compiled shaders to " .. build_path)
