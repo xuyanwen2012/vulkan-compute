@@ -85,10 +85,11 @@ int main(int argc, char **argv) {
 
     uint32_t threads_per_block = 256;
 
-    const auto algo = engine.algorithm("float_doubler.spv",
-                                       params,
-                                       threads_per_block,
-                                       make_clspv_push_const(n));
+    auto algo = engine.algorithm("float_doubler.spv",
+                                 params,
+                                 threads_per_block,
+                                 true,
+                                 make_clspv_push_const(n));
 
     const auto seq = engine.sequence();
 
@@ -138,6 +139,7 @@ int main(int argc, char **argv) {
         engine.algorithm("morton32.spv",
                          params,
                          threads_per_block,
+                         true,
                          make_clspv_push_const(n, min_coord, range));
 
     const auto seq = engine.sequence();
@@ -179,8 +181,11 @@ int main(int argc, char **argv) {
     uint32_t threads_per_block = 256;
 
     // "a.spv", params, threads_per_block, std::vector{0.0f});
-    const auto algo = engine.algorithm(
-        "tmp_sort.spv", params, threads_per_block, std::vector<float>{256});
+    const auto algo = engine.algorithm("tmp_sort.spv",
+                                       params,
+                                       threads_per_block,
+                                       false,
+                                       std::vector<float>{256});
     // "radix_sort.spv", params, threads_per_block, make_clspv_push_const(n));
 
     const auto seq = engine.sequence();

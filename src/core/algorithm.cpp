@@ -26,16 +26,20 @@ Algorithm::Algorithm(std::shared_ptr<vk::Device> device_ptr,
                      const std::string_view spirv_filename,
                      const std::vector<std::shared_ptr<Buffer>> &buffers,
                      const uint32_t threads_per_block,
+                     const bool is_clspv,
                      const std::vector<float> &push_constants)
     : VulkanResource(std::move(device_ptr)),
       spirv_filename_(spirv_filename),
       threads_per_block_(threads_per_block),
-      usm_buffers_(buffers) {
+      usm_buffers_(buffers),
+      is_clspv_(is_clspv) {
   spdlog::info("YxAlgorithm ({}) initializing with number of buffers: {}",
                spirv_filename,
                buffers.size());
 
-  set_push_constants(push_constants);
+  if (!push_constants.empty()) {
+    set_push_constants(push_constants);
+  }
 
   create_shader_module();
   create_parameters();
@@ -52,6 +56,19 @@ void Algorithm::destroy() {
   device_ptr_->destroyDescriptorPool(descriptor_pool_);
   free(push_constants_data_);
 }
+
+// vk::SpecializationInfo Algorithm::make_spec_info() const {
+//   auto info = vk::SpecializationInfo();
+
+//   if (is_clspv_) {
+//     const auto spec_map = clspv_default_spec_const();
+//     const std::array spec_map_content{threads_per_block_, 1u, 1u};
+
+//     info.setMapEntries(spec_map).setData<uint32_t>(spec_map_content);
+//   }
+
+//   return info;
+// }
 
 void Algorithm::set_push_constants(const void *data,
                                    const uint32_t size,
@@ -169,22 +186,33 @@ void Algorithm::create_pipeline() {
   pipeline_cache_ = device_ptr_->createPipelineCache(pipeline_cache_info);
 
   // Specialization info (2.75/3) telling the shader the workgroup size
-  const std::array spec_map_content{threads_per_block_, 1u, 1u};
+  if (is_clspv_) {
+    spdlog::debug("YxAlgorithm::create_pipeline, is CLSPV shader");
+
+  } else {
+    spdlog::debug("YxAlgorithm::create_pipeline, is not CLSPV shader");
+  }
 
   const auto spec_map = clspv_default_spec_const();
-  const auto spec_info = vk::SpecializationInfo()
-                             .setMapEntries(spec_map)  // 3 entries, = workgroup
-                             .setData<uint32_t>(spec_map_content);
+  const std::array spec_map_content{threads_per_block_, 1u, 1u};
+  const auto spec_info =
+      vk::SpecializationInfo().setMapEntries(spec_map).setData<uint32_t>(
+          spec_map_content);
 
-  // const auto spec_info = vk::SpecializationInfo();
+  // const auto spec_info = make_spec_info();
+
+  const auto p_name = is_clspv_ ? "foo" : "main";
 
   // Pipeline itself (3/3)
-  const auto shader_stage_create_info =
+  auto shader_stage_create_info =
       vk::PipelineShaderStageCreateInfo()
           .setStage(vk::ShaderStageFlagBits::eCompute)
           .setModule(handle_)
-          .setPName("main")
-          .setPSpecializationInfo(&spec_info);
+          .setPName(p_name);
+          
+  if (is_clspv_) {
+    shader_stage_create_info.setPSpecializationInfo(&spec_info);
+  }
 
   const auto create_info = vk::ComputePipelineCreateInfo()
                                .setStage(shader_stage_create_info)

@@ -24,32 +24,29 @@ end
 
 if is_plat("windows") then
 elseif is_plat("linux") then
-    before_build(
-        function(target)
-            os.exec("./compile_shaders.sh")
-        end
-    )
+    before_build(function(target)
+        os.exec("python3 compile_shaders.py")
+        -- os.exec("./compile_shaders.sh")
+    end)
 end
 
-after_build(
-    function(target)
-        platform = os.host()
-        arch = os.arch()
-        build_path = ""
-        if is_mode("release") then
-            build_path = "$(buildir)/" .. platform .. "/" .. arch .. "/release/"
-        else
-            build_path = "$(buildir)/" .. platform .. "/" .. arch .. "/debug/"
-        end
-        os.cp("shaders/compiled_shaders/**.spv", build_path)
-        print("Copied compiled shaders to " .. build_path)
+after_build(function(target)
+    platform = os.host()
+    arch = os.arch()
+    build_path = ""
+    if is_mode("release") then
+        build_path = "$(buildir)/" .. platform .. "/" .. arch .. "/release/"
+    else
+        build_path = "$(buildir)/" .. platform .. "/" .. arch .. "/debug/"
     end
-)
+    os.cp("shaders/compiled_shaders/**.spv", build_path)
+    print("Copied compiled shaders to " .. build_path)
+end)
 
 target("app")
     set_default(true)
     set_kind("binary")
     add_files("src/*.cpp", "src/**/*.cpp")
     add_headerfiles("src/*.hpp", "src/**/*.hpp")
-    add_packages("vk-bootstrap", "vulkan-memory-allocator", "spirv-cross", "glm", "vulkansdk")
-    add_packages("spdlog", "cli11")
+    add_packages("vk-bootstrap", "vulkan-memory-allocator", "spirv-cross", "glm",
+                "vulkansdk", "spdlog", "cli11")

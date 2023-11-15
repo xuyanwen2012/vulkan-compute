@@ -19,6 +19,7 @@ class Algorithm final : public VulkanResource<vk::ShaderModule> {
                      std::string_view spirv_filename,
                      const std::vector<std::shared_ptr<Buffer>> &buffers,
                      uint32_t threads_per_block,
+                     bool is_clspv,
                      const std::vector<float> &push_constants = {});
 
   ~Algorithm() override {
@@ -35,6 +36,7 @@ class Algorithm final : public VulkanResource<vk::ShaderModule> {
   //                  Getter and Setter
   // ---------------------------------------------------------------------------
 
+ protected:
   /**
    * @brief If your push constant is homogeneous type, you can use this function
    * to pass a vector of push constants. Just a nice wrapper of the other
@@ -63,15 +65,27 @@ class Algorithm final : public VulkanResource<vk::ShaderModule> {
                           uint32_t memory_size);
 
   template <typename T>
-  std::vector<T> get_push_constants() {
+  [[nodiscard]] std::vector<T> get_push_constants() {
     return {static_cast<T *>(push_constants_data_),
             static_cast<T *>(push_constants_data_) + push_constants_size_};
   }
+
+  // void set_clspv_spec_const();
+
+  /**
+   * @brief telling the shader the workgroup size (if is CLSPV shader)
+   *
+   * @return vk::SpecializationInfo
+   */
+  [[nodiscard]] vk::SpecializationInfo make_spec_info() const;
+
+  // void set_spec_const(const void *data, uint32_t size, uint32_t memory_size);
 
   // ---------------------------------------------------------------------------
   //                  Used by Sequence (command buffer)
   // ---------------------------------------------------------------------------
 
+ public:
   /**
    * @brief Let the cmd_buffer to bind my pipeline and descriptor set.
    *
@@ -103,6 +117,7 @@ class Algorithm final : public VulkanResource<vk::ShaderModule> {
 
  private:
   std::string spirv_filename_;
+  bool is_clspv_;
 
   // Vulkan components
   vk::Pipeline pipeline_;
