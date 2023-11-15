@@ -29,6 +29,8 @@ if __name__ == "__main__":
             output_path,
         ]
 
+        print(" ".join(clspv_command))
+
         subprocess.run(clspv_command)
 
     # Compile .comp shaders to .spv

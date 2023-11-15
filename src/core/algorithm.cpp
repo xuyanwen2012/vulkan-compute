@@ -223,7 +223,12 @@ void Algorithm::create_pipeline() {
 }
 
 void Algorithm::create_shader_module() {
-  const auto spirv_binary = load_shader_from_file(spirv_filename_);
+  std::string filename(spirv_filename_);
+  if (!spirv_filename_.ends_with(".spv")) {
+    filename += ".spv";
+  }
+
+  const auto spirv_binary = load_shader_from_file(filename);
   const auto create_info = vk::ShaderModuleCreateInfo().setCode(spirv_binary);
   handle_ = device_ptr_->createShaderModule(create_info);
 }

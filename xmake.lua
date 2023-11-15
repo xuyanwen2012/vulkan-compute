@@ -44,19 +44,26 @@ after_build(function(target)
 end)
 
 target("app")
-set_default(true)
-set_kind("binary")
-add_includedirs("include")
-add_headerfiles("include/*.hpp", "include/**/*.hpp")
-add_files("examples/main.cpp", "src/**/*.cpp")
-add_packages("vk-bootstrap", "vulkan-memory-allocator", "spirv-cross", "glm",
-             "vulkansdk", "spdlog", "cli11")
+    set_default(true)
+    set_kind("binary")
+    add_includedirs("include")
+    add_headerfiles("include/*.hpp", "include/**/*.hpp")
+    add_files("examples/main.cpp", "src/**/*.cpp")
+    add_packages("vk-bootstrap", "vulkan-memory-allocator", "spirv-cross", "glm",
+                "vulkansdk", "spdlog", "cli11")
 
 target("brt")
-set_kind("binary")
-add_includedirs("include")
-add_files("examples/02_brt.cpp", "src/**/*.cpp")
-add_headerfiles("examples/*.hpp", "include/**/*.hpp")
-add_packages("vk-bootstrap", "vulkan-memory-allocator", "spirv-cross", "glm",
-             "vulkansdk", "spdlog")
+    set_kind("binary")
+    add_includedirs("include")
+    add_files("examples/02_brt.cpp", "src/**/*.cpp")
+    add_headerfiles("examples/*.hpp", "include/**/*.hpp")
+    add_packages("vk-bootstrap", "vulkan-memory-allocator", "spirv-cross", "glm",
+                "vulkansdk", "spdlog")
 
+target("shared")
+    set_kind("binary")
+    add_includedirs("include")
+    add_files("examples/03_shared.cpp", "src/**/*.cpp")
+    add_headerfiles("examples/*.hpp", "include/**/*.hpp")
+    add_packages("vk-bootstrap", "vulkan-memory-allocator", "spirv-cross", "glm",
+                "vulkansdk", "spdlog")
