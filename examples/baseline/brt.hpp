@@ -15,7 +15,7 @@ struct InnerNode {
   int32_t parent = -1;
 };
 
-inline std::ostream& operator<<(std::ostream& os, const brt::InnerNode& node) {
+inline std::ostream& operator<<(std::ostream& os, const InnerNode& node) {
   os << std::left << std::setw(10) << "\tDelta: " << std::right << std::setw(10)
      << node.delta_node << "\n";
   os << std::left << std::setw(10) << "\tLeft: " << std::right << std::setw(10)
@@ -32,19 +32,19 @@ constexpr int sign(const int val) { return (0 < val) - (val < 0); }
 constexpr int divide2_ceil(const int val) { return (val + 1) >> 1; }
 
 constexpr int make_leaf(const int index) {
-  return index ^ ((-1 ^ index) & 1u << (sizeof(Code_t) * 8 - 1));
+  return index ^ ((-1 ^ index) & 1u << (sizeof(CodeT) * 8 - 1));
 }
 
-constexpr int make_internal(int index) { return index; }
+constexpr int make_internal(const int index) { return index; }
 
-inline int delta(const Code_t* morton_keys, const int i, const int j) {
+inline int delta(const CodeT* morton_keys, const int i, const int j) {
   constexpr auto unused_bits = 1;
   const auto li = morton_keys[i];
   const auto lj = morton_keys[j];
   return __builtin_clz(li ^ lj) - unused_bits;
 }
 
-inline int delta_safe(const Code_t* morton_keys,
+inline int delta_safe(const CodeT* morton_keys,
                       const int key_num,
                       const int i,
                       const int j) {
@@ -55,13 +55,13 @@ constexpr int min(const int a, const int b) { return a < b ? a : b; }
 constexpr int max(const int a, const int b) { return a > b ? a : b; }
 
 inline void process_inner_node_helper(const int num_keys,
-                                      const Code_t* morton_keys,
+                                      const CodeT* morton_keys,
                                       const int i,
                                       InnerNode* brt_nodes) {
-  int direction = sign(delta(morton_keys, i, i + 1) -
-                       delta_safe(morton_keys, num_keys, i, i - 1));
+  const int direction = sign(delta(morton_keys, i, i + 1) -
+                             delta_safe(morton_keys, num_keys, i, i - 1));
 
-  int delta_min = delta_safe(morton_keys, num_keys, i, i - direction);
+  const int delta_min = delta_safe(morton_keys, num_keys, i, i - direction);
 
   int I_max = 2;
   while (delta_safe(morton_keys, num_keys, i, i + I_max * direction) >
@@ -78,10 +78,10 @@ inline void process_inner_node_helper(const int num_keys,
     }
   }
 
-  int j = i + I * direction;
+  const int j = i + I * direction;
 
   // Find the split position using binary search.
-  int delta_node = delta_safe(morton_keys, num_keys, i, j);
+  const int delta_node = delta_safe(morton_keys, num_keys, i, j);
   int s = 0;
   int t = I;
 
@@ -93,10 +93,11 @@ inline void process_inner_node_helper(const int num_keys,
     }
   } while (t > 1);
 
-  int split = i + s * direction + min(direction, 0);
+  const int split = i + s * direction + min(direction, 0);
 
-  int left = min(i, j) == split ? make_leaf(min(i, j)) : make_internal(split);
-  int right =
+  const int left =
+      min(i, j) == split ? make_leaf(min(i, j)) : make_internal(split);
+  const int right =
       max(i, j) == split + 1 ? make_leaf(split + 1) : make_internal(split + 1);
 
   brt_nodes[i].delta_node = delta_node;

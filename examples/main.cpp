@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
 
     std::vector<InputT> in_data(n);
     std::iota(in_data.begin(), in_data.end(), 0);
-    std::reverse(in_data.begin(), in_data.end());
+    std::ranges::reverse(in_data);
 
     in_buf->tmp_write_data(in_data.data(), n * sizeof(InputT));
     out_but->tmp_fill_zero(n * sizeof(OutputT));

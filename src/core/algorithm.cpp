@@ -30,9 +30,9 @@ Algorithm::Algorithm(std::shared_ptr<vk::Device> device_ptr,
                      const std::vector<float> &push_constants)
     : VulkanResource(std::move(device_ptr)),
       spirv_filename_(spirv_filename),
+      is_clspv_(is_clspv),
       threads_per_block_(threads_per_block),
-      usm_buffers_(buffers),
-      is_clspv_(is_clspv) {
+      usm_buffers_(buffers) {
   spdlog::info("YxAlgorithm ({}) initializing with number of buffers: {}",
                spirv_filename,
                buffers.size());

@@ -50,7 +50,7 @@ struct OctNode {
    * @param child: index of octree node that will become the child
    * @param my_child_idx: which of my children it will be [0-7]
    */
-  void SetChild(const int child, const int my_child_idx);
+  void SetChild(int child, int my_child_idx);
 
   /**
    * @brief Set the Leaf object
@@ -58,17 +58,17 @@ struct OctNode {
    * @param leaf: index of point that will become the leaf child
    * @param my_child_idx: which of my children it will be [0-7]
    */
-  void SetLeaf(const int leaf, const int my_child_idx);
+  void SetLeaf(int leaf, int my_child_idx);
 };
 
-inline void oct::OctNode::SetChild(const int child, const int my_child_idx) {
+inline void OctNode::SetChild(const int child, const int my_child_idx) {
   // children_array[my_child_idx] = child;
   children[my_child_idx] = child;
   child_node_mask |= (1 << my_child_idx);
   //   atomicOr(&child_node_mask, 1 << my_child_idx);
 }
 
-inline void oct::OctNode::SetLeaf(const int leaf, const int my_child_idx) {
+inline void OctNode::SetLeaf(const int leaf, const int my_child_idx) {
   children[my_child_idx] = leaf;
   child_leaf_mask |= (1 << my_child_idx);
   // atomicOr(&child_leaf_mask, 1 << my_child_idx);
@@ -85,10 +85,10 @@ inline void oct::OctNode::SetLeaf(const int leaf, const int my_child_idx) {
 }
 
 inline void MakeNodesHelper(const int i,
-                            oct::OctNode *nodes,
+                            OctNode *nodes,
                             const int *node_offsets,
                             const int *edge_count,
-                            const Code_t *morton_keys,
+                            const CodeT *morton_keys,
                             const brt::InnerNode *inners,
                             const float min_coord,
                             const float tree_range,
@@ -97,7 +97,7 @@ inline void MakeNodesHelper(const int i,
   const int n_new_nodes = edge_count[i];
   for (int j = 0; j < n_new_nodes - 1; ++j) {
     const int level = inners[i].delta_node / 3 - j;
-    const Code_t node_prefix = morton_keys[i] >> (kCodeLen - (3 * level));
+    const CodeT node_prefix = morton_keys[i] >> (kCodeLen - (3 * level));
     const int child_idx = static_cast<int>(node_prefix & 0b111);
     const int parent = oct_idx + 1;
 
@@ -128,14 +128,14 @@ inline void MakeNodesHelper(const int i,
     }
     const int oct_parent = node_offsets[rt_parent];
     const int top_level = inners[i].delta_node / 3 - n_new_nodes + 1;
-    const Code_t top_node_prefix =
+    const CodeT top_node_prefix =
         morton_keys[i] >> (kCodeLen - (3 * top_level));
     const int child_idx = static_cast<int>(top_node_prefix & 0b111);
 
     nodes[oct_parent].SetChild(oct_idx, child_idx);
 
     // float dec_x, dec_y, dec_z;
-    auto p =morton::single_code_to_point_v2(
+    auto p = morton::single_code_to_point_v2(
         top_node_prefix << (kCodeLen - (3 * top_level)),
         // dec_x,
         // dec_y,

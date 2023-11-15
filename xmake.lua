@@ -45,7 +45,7 @@ end
 function template()
     set_kind("binary")
     add_includedirs("include")
-    add_headerfiles("examples/*.hpp")
+    add_headerfiles("examples/*.hpp", "examples/baseline/*.hpp")
     add_deps("lib")
     add_packages("vk-bootstrap", "vulkan-memory-allocator", "spirv-cross",
                  "glm", "vulkansdk", "spdlog")

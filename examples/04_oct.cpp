@@ -150,7 +150,7 @@ int main(int argc, char** argv) {
   std::vector<oct::OctNode> cpu_oct_nodes(num_oc_nodes);
 
   int root_level = u_brt_nodes[0].delta_node / 3;
-  Code_t root_prefix = u_mortons[0] >> (kCodeLen - (root_level * 3));
+  CodeT root_prefix = u_mortons[0] >> (kCodeLen - (root_level * 3));
 
   auto p = morton::single_code_to_point_v2(
       root_prefix << (kCodeLen - (root_level * 3)), min_coord, range);

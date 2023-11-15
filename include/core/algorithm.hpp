@@ -70,17 +70,6 @@ class Algorithm final : public VulkanResource<vk::ShaderModule> {
             static_cast<T *>(push_constants_data_) + push_constants_size_};
   }
 
-  // void set_clspv_spec_const();
-
-  /**
-   * @brief telling the shader the workgroup size (if is CLSPV shader)
-   *
-   * @return vk::SpecializationInfo
-   */
-  [[nodiscard]] vk::SpecializationInfo make_spec_info() const;
-
-  // void set_spec_const(const void *data, uint32_t size, uint32_t memory_size);
-
   // ---------------------------------------------------------------------------
   //                  Used by Sequence (command buffer)
   // ---------------------------------------------------------------------------
