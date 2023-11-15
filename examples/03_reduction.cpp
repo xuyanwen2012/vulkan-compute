@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
   }
 
   std::vector params{in_buf, out_buf};
-  auto algo = engine.algorithm("reduction-0.spv",
+  auto algo = engine.algorithm("reduction_0.spv",
                                params,
                                256,  // num_threads
                                true,
