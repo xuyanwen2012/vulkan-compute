@@ -7,6 +7,7 @@
 #include "baseline/oct.hpp"
 #include "common.hpp"
 #include "core/engine.hpp"
+#include "helpers.hpp"
 
 int main(int argc, char **argv) {
   setup_log_level("debug");
@@ -26,58 +27,63 @@ int main(int argc, char **argv) {
   assert(u_mortons.size() == n);
   assert(u_brt_nodes.size() == num_brt_nodes);
 
-  std::vector<int32_t> u_edge_counts(n);
+  std::vector<int32_t> cpu_edge_counts(n);
   std::vector<int32_t> u_oc_offset(n);
 
   //  std::vector<int> indices(input_size);
 
-  u_edge_counts[0] = 1u;
+  cpu_edge_counts[0] = 1u;
   for (int i = 0; i < num_brt_nodes; ++i) {
-    oct::CalculateEdgeCountHelper(i, u_edge_counts.data(), u_brt_nodes.data());
+    oct::CalculateEdgeCountHelper(
+        i, cpu_edge_counts.data(), u_brt_nodes.data());
   }
 
-  std::partial_sum(
-      u_edge_counts.begin(), u_edge_counts.end(), u_oc_offset.begin() + 1);
-  u_oc_offset[0] = 0;
+  // std::partial_sum(
+  //     u_edge_counts.begin(), u_edge_counts.end(), u_oc_offset.begin() + 1);
+  // u_oc_offset[0] = 0;
 
-  for (int i = 0; i < num_brt_nodes; ++i) {
-    std::cout << i << ":\t" << u_oc_offset[i] << std::endl;
-  }
-
-  
-
-  // const auto in_buf = engine.buffer(n * sizeof(float));
-  // const auto out_buf = engine.buffer(n * sizeof(float));
-
-  // // Fill buffer with some data
-  // auto in_ptr = in_buf->get_data_mut<float>();
-  // auto out_ptr = out_buf->get_data_mut<float>();
-
-  // for (int i = 0; i < n; ++i) {
-  //   in_ptr[i] = i;
-  //   out_ptr[i] = 0;
+  // for (int i = 0; i < num_brt_nodes; ++i) {
+  //   std::cout << i << ":\t" << u_oc_offset[i] << std::endl;
   // }
 
-  // std::vector params{in_buf, out_buf};
-  // auto algo = engine.algorithm("reduction-0.spv",
-  //                              params,
-  //                              256,  // num_threads
-  //                              true,
-  //                              std::vector<float>{0, 0, 0, 0, 0, 0, 0, 0,
-  //                              n});
-  // const auto seq = engine.sequence();
+  const auto brt_nodes_buf = engine.buffer(n * sizeof(brt::InnerNode));
+  const auto edge_count_buf = engine.buffer(n * sizeof(int32_t));
 
-  // seq->simple_record_commands(*algo, n);
-  // seq->launch_kernel_async();
+  auto brt_node_ptr = brt_nodes_buf->get_data_mut<brt::InnerNode>();
+  auto edge_count_ptr = edge_count_buf->get_data_mut<int32_t>();
 
-  // // ... do something else
+  std::ranges::copy(u_brt_nodes, brt_node_ptr);
+  edge_count_buf->tmp_fill_zero(n * sizeof(int32_t));
 
-  // seq->sync();
+  std::vector params{brt_nodes_buf, edge_count_buf};
+  auto algo = engine.algorithm("edge_count.spv",
+                               params,
+                               256,  // num_threads
+                               true,
+                               make_clspv_push_const(n));
+
+  const auto seq = engine.sequence();
+
+  seq->simple_record_commands(*algo, n);
+  seq->launch_kernel_async();
+
+  // ... do something else
+
+  seq->sync();
 
   // // Show results
-  // for (int i = 0; i < 10; ++i) {
-  //   std::cout << i << ":\t" << out_ptr[i] << std::endl;
+  // for (int i = 0; i < num_brt_nodes; ++i) {
+  //   std::cout << i << ":\t" << edge_count_ptr[i] << std::endl;
   // }
+
+  for (int i = 0; i < num_brt_nodes; ++i) {
+    if (cpu_edge_counts[i] != edge_count_ptr[i]) {
+      spdlog::error("Mismatch at {} : {} vs {}",
+                    i,
+                    cpu_edge_counts[i],
+                    edge_count_ptr[i]);
+    }
+  }
 
   spdlog::info("Done");
   return EXIT_SUCCESS;
