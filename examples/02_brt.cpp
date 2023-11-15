@@ -102,6 +102,17 @@ int main(int argc, char **argv) {
     }
   }
 
+  // Debug
+  for (auto i : {528, 529}) {
+    std::cout << "CPU Result: \n";
+    std::cout << cpu_out[i] << std::endl;
+    std::cout << "GPU Result: \n";
+    std::cout << out[i] << std::endl;
+  }
+
+  // save_pod_data_to_file(u_morton_keys, "sorted_mortons_1024.bin");
+  // save_pod_data_to_file(cpu_out, "brt_nodes_1024.bin");
+
   spdlog::info("Done");
   return EXIT_SUCCESS;
 }

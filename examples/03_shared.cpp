@@ -3,7 +3,6 @@
 
 #include "common.hpp"
 #include "core/engine.hpp"
-#include "helpers.hpp"
 
 int main(int argc, char **argv) {
   setup_log_level("debug");

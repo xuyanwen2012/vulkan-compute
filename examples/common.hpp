@@ -1,7 +1,9 @@
 #pragma once
 
 #include <algorithm>
+#include <fstream>
 #include <iostream>
+#include <vector>
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 
@@ -41,4 +43,27 @@ inline void setup_log_level(std::string log_level) {
   }
 
   spdlog::set_level(spd_log_level);
+}
+
+inline void save_pod_data_to_file(const std::byte *data,
+                                  const size_t size,
+                                  const std::string &filename = "data.bin") {
+  std::ofstream outFile(filename, std::ios::binary);
+
+  if (!outFile.is_open()) {
+    throw std::runtime_error("Failed to open file for writing.");
+  }
+
+  spdlog::info("Saving {} bytes to {}", size, filename);
+
+  outFile.write(reinterpret_cast<const char *>(data), size);
+  outFile.close();
+}
+
+template <typename T>
+inline void save_pod_data_to_file(const std::vector<T> &data,
+                                  const std::string &filename = "data.bin") {
+  save_pod_data_to_file(reinterpret_cast<const std::byte *>(data.data()),
+                        data.size() * sizeof(T),
+                        filename);
 }
