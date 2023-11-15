@@ -1,4 +1,4 @@
-#include "sequence.hpp"
+#include "core/sequence.hpp"
 
 [[nodiscard]] constexpr uint32_t num_blocks(const uint32_t items,
                                             const uint32_t threads_per_block) {

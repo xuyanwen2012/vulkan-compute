@@ -6,7 +6,7 @@
 #include <random>
 #include <vector>
 
-#include "morton/tmp.hpp"
+#include "morton.hpp"
 
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>

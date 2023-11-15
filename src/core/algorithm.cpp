@@ -1,8 +1,8 @@
-#include "algorithm.hpp"
+#include "core/algorithm.hpp"
 
 #include <cstdint>
 
-#include "../common/shader_loader.hpp"
+#include "core/shader_loader.hpp"
 
 // For CLSPV generated shader, need to use specialization constants to pass
 // Must need 3 uint32 at constant ID 0, 1, 2. The value of them is the workgroup
@@ -209,7 +209,7 @@ void Algorithm::create_pipeline() {
           .setStage(vk::ShaderStageFlagBits::eCompute)
           .setModule(handle_)
           .setPName(p_name);
-          
+
   if (is_clspv_) {
     shader_stage_create_info.setPSpecializationInfo(&spec_info);
   }
