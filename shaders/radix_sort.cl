@@ -52,7 +52,9 @@ kernel void foo(__global uint *g_elements_in,
           iteration % 2 == 0 ? g_elements_in[ID] : g_elements_out[ID];
       const uint bin = val >> shift & (RADIX_SORT_BINS - 1);
 
-      histogram[bin] += 1u;
+      // histogram[bin] += 1u;
+      *(histogram + bin) +=1u;
+      // histogram[bin] += 1u;
     }
     barrier(CLK_LOCAL_MEM_FENCE);
 

@@ -199,8 +199,6 @@ void Algorithm::create_pipeline() {
       vk::SpecializationInfo().setMapEntries(spec_map).setData<uint32_t>(
           spec_map_content);
 
-  // const auto spec_info = make_spec_info();
-
   const auto p_name = is_clspv_ ? "foo" : "main";
 
   // Pipeline itself (3/3)
