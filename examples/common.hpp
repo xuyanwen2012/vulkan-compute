@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <string_view>
 #include <vector>
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
@@ -45,10 +46,11 @@ inline void setup_log_level(std::string log_level) {
   spdlog::set_level(spd_log_level);
 }
 
-inline void save_pod_data_to_file(const std::byte *data,
-                                  const size_t size,
-                                  const std::string &filename = "data.bin") {
-  std::ofstream outFile(filename, std::ios::binary);
+inline void save_pod_data_to_file(
+    const std::byte *data,
+    const size_t size,
+    const std::string_view filename = "data.bin") {
+  std::ofstream outFile(filename.data(), std::ios::binary);
 
   if (!outFile.is_open()) {
     throw std::runtime_error("Failed to open file for writing.");
@@ -66,4 +68,26 @@ inline void save_pod_data_to_file(const std::vector<T> &data,
   save_pod_data_to_file(reinterpret_cast<const std::byte *>(data.data()),
                         data.size() * sizeof(T),
                         filename);
+}
+
+template <typename T>
+[[nodiscard]] inline std::vector<T> load_pod_data_from_file(
+    const std::string_view filename) {
+  std::vector<T> loaded_data;
+
+  std::ifstream inFile(filename.data(), std::ios::binary);
+  if (!inFile.is_open()) {
+    throw std::runtime_error("Failed to open file for reading.");
+  }
+
+  inFile.seekg(0, std::ios::end);
+  size_t fileSize = inFile.tellg();
+  inFile.seekg(0, std::ios::beg);
+
+  loaded_data.resize(fileSize / sizeof(T));
+
+  inFile.read(reinterpret_cast<char *>(loaded_data.data()), fileSize);
+  inFile.close();
+
+  return loaded_data;
 }
