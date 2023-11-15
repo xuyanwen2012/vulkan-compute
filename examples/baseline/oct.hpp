@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 
 #include "brt.hpp"
+#include "morton.hpp"
 
 namespace oct {
 
@@ -22,7 +23,8 @@ struct OctNode {
   // Payload
   Body body;
 
-  glm::vec3 cornor;
+  // glm::vec3 cornor;
+  glm::vec4 cornor;  // i am not sure if I should ever use vec3
   float cell_size;
 
   // TODO: This is overkill number of pointers
@@ -102,14 +104,15 @@ inline void MakeNodesHelper(const int i,
     nodes[parent].SetChild(oct_idx, child_idx);
 
     // calculate corner point (LSB have already been shifted off)
-    float dec_x, dec_y, dec_z;
-    CodeToPoint(node_prefix << (kCodeLen - (3 * level)),
-                dec_x,
-                dec_y,
-                dec_z,
-                min_coord,
-                tree_range);
-    nodes[oct_idx].cornor = {dec_x, dec_y, dec_z};
+    // float dec_x, dec_y, dec_z;
+    auto p =
+        morton::single_code_to_point_v2(node_prefix << (kCodeLen - (3 * level)),
+                                        //  dec_x,
+                                        //  dec_y,
+                                        //  dec_z,
+                                        min_coord,
+                                        tree_range);
+    nodes[oct_idx].cornor = {p[0], p[1], p[2], 0.0f};
 
     // each cell is half the size of the level above it
     nodes[oct_idx].cell_size =
@@ -131,14 +134,16 @@ inline void MakeNodesHelper(const int i,
 
     nodes[oct_parent].SetChild(oct_idx, child_idx);
 
-    float dec_x, dec_y, dec_z;
-    CodeToPoint(top_node_prefix << (kCodeLen - (3 * top_level)),
-                dec_x,
-                dec_y,
-                dec_z,
-                min_coord,
-                tree_range);
-    nodes[oct_idx].cornor = {dec_x, dec_y, dec_z};
+    // float dec_x, dec_y, dec_z;
+    auto p =morton::single_code_to_point_v2(
+        top_node_prefix << (kCodeLen - (3 * top_level)),
+        // dec_x,
+        // dec_y,
+        // dec_z,
+        min_coord,
+        tree_range);
+    nodes[oct_idx].cornor = {p[0], p[1], p[2], 0.0f};
+    // nodes[oct_idx].cornor = {dec_x, dec_y, dec_z, 0.0f};
 
     nodes[oct_idx].cell_size =
         tree_range / static_cast<float>(1 << (top_level - root_level));
