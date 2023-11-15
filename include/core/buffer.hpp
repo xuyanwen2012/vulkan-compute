@@ -65,7 +65,12 @@ class Buffer final : public VulkanResource<vk::Buffer> {
   [[nodiscard]] VmaAllocation get_allocation() const { return allocation_; }
 
   [[nodiscard]] const std::byte *get_data() const { return mapped_data_; }
-  [[nodiscard]] std::byte *get_data_mut() const { return mapped_data_; }
+  [[nodiscard]] std::byte *get_data_mut() { return mapped_data_; }
+
+  template <typename T>
+  [[nodiscard]] T *get_data_mut() {
+    return reinterpret_cast<T *>(mapped_data_);
+  }
 
   [[nodiscard]] vk::DeviceMemory get_memory() const { return memory_; }
   [[nodiscard, maybe_unused]] vk::DeviceAddress get_device_address() const {

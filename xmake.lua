@@ -52,10 +52,11 @@ add_files("examples/main.cpp", "src/**/*.cpp")
 add_packages("vk-bootstrap", "vulkan-memory-allocator", "spirv-cross", "glm",
              "vulkansdk", "spdlog", "cli11")
 
--- target("brt")
--- set_kind("binary")
--- add_files("src/example_brt.cpp", "src/**/*.cpp")
--- add_headerfiles("src/*.hpp", "src/**/*.hpp")
--- add_packages("vk-bootstrap", "vulkan-memory-allocator", "spirv-cross", "glm",
---              "vulkansdk", "spdlog")
+target("brt")
+set_kind("binary")
+add_includedirs("include")
+add_files("examples/02_brt.cpp", "src/**/*.cpp")
+add_headerfiles("examples/*.hpp", "include/**/*.hpp")
+add_packages("vk-bootstrap", "vulkan-memory-allocator", "spirv-cross", "glm",
+             "vulkansdk", "spdlog")
 

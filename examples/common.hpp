@@ -13,7 +13,7 @@
   return os;
 }
 
-inline void setup_log_level(std::string &log_level) {
+inline void setup_log_level(std::string log_level) {
 #if defined(NDEBUG)
   spdlog::set_level(spdlog::level::off);
   return;

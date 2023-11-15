@@ -1,26 +1,13 @@
 #include <algorithm>
-#include <cstdint>
-#include <cstdlib>
 #include <iomanip>
 #include <iostream>
 #include <random>
 #include <vector>
 
-#include "morton.hpp"
-
-#define GLM_FORCE_RADIANS
-#include <glm/glm.hpp>
-
+#include "common.hpp"
 #include "core/engine.hpp"
 #include "helpers.hpp"
-#include "spdlog/spdlog.h"
-
-#define policy_t std::execution::par
-
-[[nodiscard]] std::ostream &operator<<(std::ostream &os, const glm::vec4 &v) {
-  os << "(" << v.x << ", " << v.y << ", " << v.z << ")";
-  return os;
-}
+#include "morton.hpp"
 
 struct InnerNode {
   int32_t delta;
@@ -41,14 +28,8 @@ std::ostream &operator<<(std::ostream &os, const InnerNode &node) {
   return os;
 }
 
-// std::ostream &operator<<(std::ostream &os, const InnerNode &node) {
-//   os << "(" << node.delta << ", " << node.left << ", " << node.right << ", "
-//      << node.parent << ")";
-//   return os;
-// }
-
 int main(int argc, char **argv) {
-  spdlog::set_level(spdlog::level::debug);
+  setup_log_level("debug");
 
   constexpr auto n = 1024;
 
@@ -90,7 +71,11 @@ int main(int argc, char **argv) {
   const auto morton_key_buf = engine.buffer(n * sizeof(uint32_t));
   const auto inner_nodes_buf = engine.buffer(n * sizeof(InnerNode));
 
-  morton_key_buf->tmp_write_data(u_morton_keys.data(), n * sizeof(uint32_t));
+  // morton_key_buf->tmp_write_data(u_morton_keys.data(), n * sizeof(uint32_t));
+
+  auto ptr = morton_key_buf->get_data_mut<uint32_t>();
+  std::ranges::copy(u_morton_keys, ptr);
+
   inner_nodes_buf->tmp_fill_zero(n * sizeof(InnerNode));
 
   std::vector params{morton_key_buf, inner_nodes_buf};
