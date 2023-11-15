@@ -1,32 +1,13 @@
 #include <algorithm>
-#include <iomanip>
 #include <iostream>
 #include <random>
 #include <vector>
 
+#include "basline/brt.hpp"
 #include "common.hpp"
 #include "core/engine.hpp"
 #include "helpers.hpp"
 #include "morton.hpp"
-
-struct InnerNode {
-  int32_t delta;
-  int32_t left;
-  int32_t right;
-  int32_t parent;
-};
-
-std::ostream &operator<<(std::ostream &os, const InnerNode &node) {
-  os << std::left << std::setw(10) << "\tDelta: " << std::right << std::setw(10)
-     << node.delta << "\n";
-  os << std::left << std::setw(10) << "\tLeft: " << std::right << std::setw(10)
-     << node.left << "\n";
-  os << std::left << std::setw(10) << "\tRight: " << std::right << std::setw(10)
-     << node.right << "\n";
-  os << std::left << std::setw(10) << "\tParent: " << std::right
-     << std::setw(10) << node.parent << "\n";
-  return os;
-}
 
 int main(int argc, char **argv) {
   setup_log_level("debug");
@@ -69,25 +50,25 @@ int main(int argc, char **argv) {
 
   //
   const auto morton_key_buf = engine.buffer(n * sizeof(uint32_t));
-  const auto inner_nodes_buf = engine.buffer(n * sizeof(InnerNode));
+  const auto inner_nodes_buf = engine.buffer(n * sizeof(brt::InnerNode));
 
-  // morton_key_buf->tmp_write_data(u_morton_keys.data(), n * sizeof(uint32_t));
+  {
+    auto ptr = morton_key_buf->get_data_mut<uint32_t>();
+    std::ranges::copy(u_morton_keys, ptr);
+  }
 
-  auto ptr = morton_key_buf->get_data_mut<uint32_t>();
-  std::ranges::copy(u_morton_keys, ptr);
-
-  inner_nodes_buf->tmp_fill_zero(n * sizeof(InnerNode));
+  {
+    auto ptr = inner_nodes_buf->get_data_mut<brt::InnerNode>();
+    std::fill_n(ptr, n, brt::InnerNode{});
+  }
 
   std::vector params{morton_key_buf, inner_nodes_buf};
-
   constexpr uint32_t threads_per_block = 256;
-
   auto algo = engine.algorithm("build_radix_tree.spv",
                                params,
                                threads_per_block,
                                true,
                                make_clspv_push_const(n));
-
   const auto seq = engine.sequence();
 
   seq->simple_record_commands(*algo, n);
@@ -99,10 +80,27 @@ int main(int argc, char **argv) {
 
   // Show results
   const auto out =
-      reinterpret_cast<const InnerNode *>(inner_nodes_buf->get_data());
+      reinterpret_cast<const brt::InnerNode *>(inner_nodes_buf->get_data());
   for (int i = 0; i < 10; ++i) {
     std::cout << i << ":\n" << out[i] << std::endl;
   }
 
+  std::vector<brt::InnerNode> cpu_out(num_brt_nodes);
+  for (auto i = 0; i < num_brt_nodes; ++i) {
+    process_inner_node_helper(n, u_morton_keys.data(), i, cpu_out.data());
+  }
+  for (int i = 0; i < 10; ++i) {
+    std::cout << i << " (cpu):\n" << cpu_out[i] << std::endl;
+  }
+
+  for (size_t i = 0; i < num_brt_nodes; ++i) {
+    if (cpu_out[i].delta_node != out[i].delta_node ||
+        cpu_out[i].left != out[i].left || cpu_out[i].right != out[i].right ||
+        cpu_out[i].parent != out[i].parent) {
+      spdlog::error("Found a difference at index {}", i);
+    }
+  }
+
+  spdlog::info("Done");
   return EXIT_SUCCESS;
 }
