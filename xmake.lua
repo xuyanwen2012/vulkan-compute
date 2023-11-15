@@ -44,9 +44,17 @@ after_build(function(target)
 end)
 
 target("app")
-    set_default(true)
-    set_kind("binary")
-    add_files("src/*.cpp", "src/**/*.cpp")
-    add_headerfiles("src/*.hpp", "src/**/*.hpp")
-    add_packages("vk-bootstrap", "vulkan-memory-allocator", "spirv-cross", "glm",
-                "vulkansdk", "spdlog", "cli11")
+set_default(true)
+set_kind("binary")
+add_files("src/main.cpp", "src/**/*.cpp")
+add_headerfiles("src/*.hpp", "src/**/*.hpp")
+add_packages("vk-bootstrap", "vulkan-memory-allocator", "spirv-cross", "glm",
+             "vulkansdk", "spdlog", "cli11")
+
+target("brt")
+set_kind("binary")
+add_files("src/example_brt.cpp", "src/**/*.cpp")
+add_headerfiles("src/*.hpp", "src/**/*.hpp")
+add_packages("vk-bootstrap", "vulkan-memory-allocator", "spirv-cross", "glm",
+             "vulkansdk", "spdlog")
+

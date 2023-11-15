@@ -180,13 +180,11 @@ int main(int argc, char **argv) {
 
     uint32_t threads_per_block = 256;
 
-    // "a.spv", params, threads_per_block, std::vector{0.0f});
-    const auto algo = engine.algorithm("tmp_sort.spv",
+    const auto algo = engine.algorithm("radix_sort.spv",
                                        params,
                                        threads_per_block,
-                                       false,
-                                       std::vector<float>{256});
-    // "radix_sort.spv", params, threads_per_block, make_clspv_push_const(n));
+                                       true,
+                                       make_clspv_push_const(n));
 
     const auto seq = engine.sequence();
 
@@ -203,12 +201,12 @@ int main(int argc, char **argv) {
 
     seq->sync();
 
-    // Show results
-    const auto in = reinterpret_cast<const InputT *>(in_buf->get_data());
-    const auto out = reinterpret_cast<const OutputT *>(out_but->get_data());
-    for (int i = 0; i < 256; ++i) {
-      std::cout << i << ":\t" << in[i] << "\t-\t" << out[i] << std::endl;
-    }
+    // // Show results
+    // const auto in = reinterpret_cast<const InputT *>(in_buf->get_data());
+    // const auto out = reinterpret_cast<const OutputT *>(out_but->get_data());
+    // for (int i = 0; i < 256; ++i) {
+    //   std::cout << i << ":\t" << in[i] << "\t-\t" << out[i] << std::endl;
+    // }
   }
 
   std::cout << "Done!" << std::endl;

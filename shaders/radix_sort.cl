@@ -1,44 +1,40 @@
 
-// clang-format off
-
-// RUN: clspv -O0 --spv-version=1.5 --cl-std=CLC++ -inline-entry-points radix_sort.cl -o compiled_shaders/radix_sort.spv
-// 
-// RUN: clspv-reflection --target-env spv1.5 compiled_shaders/radix_sort.spv
-//
-// clang-format on
 
 #pragma OPENCL EXTENSION cl_khr_subgroups : enable
 
-const uint WORKGROUP_SIZE = 256;
-const uint RADIX_SORT_BINS = 256;
-const uint SUBGROUP_SIZE = 64;  // 32 NVIDIA; 64 AMD
-const uint BITS = 32;           //  sorting uint32_t
-const uint ITERATIONS = 4;      // sorting 8 bits per iteration
 // struct BinFlags {
 //   uint flags[WORKGROUP_SIZE / BITS];
 // };
 
-typedef struct {
-  uint flags[WORKGROUP_SIZE / BITS];
-} BinFlags;
+// typedef struct {
+//   uint flags[WORKGROUP_SIZE / BITS];
+// } BinFlags;
 
-#define ELEMENT_IN(index, iteration) \
-  (iteration % 2 == 0 ? g_elements_in[index] : g_elements_out[index])
+// #define ELEMENT_IN(index, iteration) \
+//   (iteration % 2 == 0 ? g_elements_in[index] : g_elements_out[index])
 
-kernel void foo(global uint *g_elements_in,
-                global uint *g_elements_out,
-                const float n) {
+kernel void foo(__global uint *g_elements_in,
+                __global uint *g_elements_out,
+                float n) {
+  const uint WORKGROUP_SIZE = 256;
+  const uint RADIX_SORT_BINS = 256;
+  const uint SUBGROUP_SIZE = 64;  // 32 NVIDIA; 64 AMD
+  const uint BITS = 32;           //  sorting uint32_t
+  const uint ITERATIONS = 4;      // sorting 8 bits per iteration
+
   local uint histogram[RADIX_SORT_BINS];
   local uint sums[RADIX_SORT_BINS / SUBGROUP_SIZE];  // subgroup reductions
   local uint local_offsets[RADIX_SORT_BINS];
   local uint global_offsets[RADIX_SORT_BINS];
-  local BinFlags bin_flags[RADIX_SORT_BINS];
+
+  // local BinFlags bin_flags[RADIX_SORT_BINS];
+  // local uint new_bin_flags[RADIX_SORT_BINS* (WORKGROUP_SIZE / BITS)];
 
   // uint index = get_global_id(0);
   // if (index >= g_num_elements) return;
 
-  uint g_num_elements = convert_uint(n);
-  const uint lID = get_local_id(0);            // thread ID in workgroup (CUDA)
+  const uint g_num_elements = convert_uint(n);
+  const uint lID = get_local_id(0);            // thread ID in workgroup(CUDA)
   const uint sID = get_sub_group_id();         // warp ID in workgroup (CUDA)
   const uint lsID = get_sub_group_local_id();  // thread ID in warp (CUDA)
 
@@ -49,15 +45,14 @@ kernel void foo(global uint *g_elements_in,
     if (lID < RADIX_SORT_BINS) {
       histogram[lID] = 0u;
     }
-    // work_group_barrier(CLK_LOCAL_MEM_FENCE);
-    barrier(CLK_LOCAL_MEM_FENCE);
+    work_group_barrier(CLK_LOCAL_MEM_FENCE);
 
     for (uint ID = lID; ID < g_num_elements; ID += WORKGROUP_SIZE) {
-      // determine the bin
-      const uint bin =
-          (ELEMENT_IN(ID, iteration) >> shift) & (RADIX_SORT_BINS - 1);
-      // increment the histogram
-      atom_add(&histogram[bin], 1u);
+      const uint val =
+          iteration % 2 == 0 ? g_elements_in[ID] : g_elements_out[ID];
+      const uint bin = val >> shift & (RADIX_SORT_BINS - 1);
+
+      histogram[bin] += 1u;
     }
     barrier(CLK_LOCAL_MEM_FENCE);
 

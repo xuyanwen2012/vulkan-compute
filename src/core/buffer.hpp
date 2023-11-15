@@ -37,17 +37,14 @@ class Buffer final : public VulkanResource<vk::Buffer> {
    * @param memory_usage Memory usage of the buffer. Default is Auto.
    * @param flags Allocation flags. Default is persistent mapped memory.
    */
-  explicit Buffer(
-      std::shared_ptr<vk::Device> device_ptr,
-      vk::DeviceSize size,
-      vk::BufferUsageFlags buffer_usage =
-          vk::BufferUsageFlagBits::eStorageBuffer |
-          vk::BufferUsageFlagBits::eTransferDst,
-      VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_AUTO,
-      VmaAllocationCreateFlags flags =
-          VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
-          VMA_ALLOCATION_CREATE_HOST_ACCESS_ALLOW_TRANSFER_INSTEAD_BIT |
-          VMA_ALLOCATION_CREATE_MAPPED_BIT);
+  explicit Buffer(std::shared_ptr<vk::Device> device_ptr,
+                  vk::DeviceSize size,
+                  vk::BufferUsageFlags buffer_usage =
+                      vk::BufferUsageFlagBits::eStorageBuffer,
+                  VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_AUTO,
+                  VmaAllocationCreateFlags flags =
+                      VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT |
+                      VMA_ALLOCATION_CREATE_MAPPED_BIT);
 
   Buffer(const Buffer &) = delete;
 

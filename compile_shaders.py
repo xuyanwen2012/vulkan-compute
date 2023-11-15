@@ -21,6 +21,7 @@ if __name__ == "__main__":
             "clspv",
             "-w",
             "-O0",
+            "--spv-version=1.3",
             "--cl-std=CL2.0",
             "-inline-entry-points",
             input_path,
