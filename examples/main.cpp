@@ -4,10 +4,10 @@
 #include <random>
 #include <vector>
 
+#include "baseline/morton.hpp"
 #include "common.hpp"
 #include "core/engine.hpp"
 #include "helpers.hpp"
-#include "morton.hpp"
 
 int main(int argc, char **argv) {
   CLI::App app{"Vulkan Compute Example"};
@@ -112,7 +112,8 @@ int main(int argc, char **argv) {
     seq->sync();
 
     auto cpu_out = std::vector<glm::uint>(n);
-    morton::foo(in_data.data(), cpu_out.data(), n, min_coord, range);
+    morton::point_to_morton32(
+        in_data.data(), cpu_out.data(), n, min_coord, range);
 
     const auto in = reinterpret_cast<const glm::vec4 *>(in_buf->get_data());
     const auto out = reinterpret_cast<const glm::uint *>(out_but->get_data());

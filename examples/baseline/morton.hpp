@@ -19,11 +19,11 @@ inline glm::uint encode(const glm::uint i,
   return expand_bit(i) | expand_bit(j) << 1 | expand_bit(k) << 2;
 }
 
-inline void foo(const glm::vec4 *in_xyz,
-                glm::uint *out,
-                const float n,
-                const float min_coord,
-                const float range) {
+inline void point_to_morton32(const glm::vec4 *in_xyz,
+                              glm::uint *out,
+                              const float n,
+                              const float min_coord,
+                              const float range) {
   for (int index = 0; index < n; ++index) {
     constexpr glm::uint code_len = 31;
     const float x = in_xyz[index].x;

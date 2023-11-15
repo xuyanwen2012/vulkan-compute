@@ -3,11 +3,11 @@
 #include <random>
 #include <vector>
 
-#include "basline/brt.hpp"
+#include "baseline/brt.hpp"
+#include "baseline/morton.hpp"
 #include "common.hpp"
 #include "core/engine.hpp"
 #include "helpers.hpp"
-#include "morton.hpp"
 
 int main(int argc, char **argv) {
   setup_log_level("debug");
@@ -31,7 +31,8 @@ int main(int argc, char **argv) {
   // compute and sort morton
 
   auto u_morton_keys = std::vector<glm::uint>(n);
-  morton::foo(in_data.data(), u_morton_keys.data(), n, min_coord, range);
+  morton::point_to_morton32(
+      in_data.data(), u_morton_keys.data(), n, min_coord, range);
 
   std::sort(u_morton_keys.begin(), u_morton_keys.end());
 
