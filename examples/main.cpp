@@ -1,41 +1,25 @@
 #include <CLI/CLI.hpp>
 #include <algorithm>
-#include <cstdint>
-#include <cstdlib>
 #include <iostream>
 #include <random>
 #include <vector>
 
-#include "morton.hpp"
-
-#define GLM_FORCE_RADIANS
-#include <glm/glm.hpp>
-
+#include "common.hpp"
 #include "core/engine.hpp"
 #include "helpers.hpp"
-#include "spdlog/spdlog.h"
-
-[[nodiscard]] std::ostream &operator<<(std::ostream &os, const glm::vec4 &v) {
-  os << "(" << v.x << ", " << v.y << ", " << v.z << ")";
-  return os;
-}
+#include "morton.hpp"
 
 int main(int argc, char **argv) {
   CLI::App app{"Vulkan Compute Example"};
 
-// Default log level
-#if defined(NDEBUG)
-  std::string log_level = "off";
-#else
   std::string log_level = "debug";
-#endif
-
   app.add_option(
-      "-l,--log-level",
-      log_level,
-      "Set the log level (trace, debug, info, warn, error, critical)");
+         "-l,--log-level",
+         log_level,
+         "Set the log level (trace, debug, info, warn, error, critical)")
+      ->default_val("debug");
 
-  int which_example = 0;
+  int which_example;
   app.add_option("-e,--example",
                  which_example,
                  "Which example to run (0: float doubler, 1: morton code)")
@@ -43,34 +27,10 @@ int main(int argc, char **argv) {
 
   CLI11_PARSE(app, argc, argv);
 
-  std::ranges::transform(log_level, log_level.begin(), ::tolower);
-
-  spdlog::level::level_enum spd_log_level;
-  if (log_level == "off") {
-    spd_log_level = spdlog::level::off;
-  } else if (log_level == "trace") {
-    spd_log_level = spdlog::level::trace;
-  } else if (log_level == "debug") {
-    spd_log_level = spdlog::level::debug;
-  } else if (log_level == "info") {
-    spd_log_level = spdlog::level::info;
-  } else if (log_level == "warn") {
-    spd_log_level = spdlog::level::warn;
-  } else if (log_level == "error") {
-    spd_log_level = spdlog::level::err;
-  } else if (log_level == "critical") {
-    spd_log_level = spdlog::level::critical;
-  } else {
-    // Handle invalid log level input
-    std::cerr << "Invalid log level: " << log_level << std::endl;
-    return EXIT_FAILURE;
-  }
-
-  spdlog::set_level(spd_log_level);
+  setup_log_level(log_level);
 
   constexpr auto n = 1024;
 
-  // Computation start here
   core::ComputeEngine engine{};
 
   // ---------- Example A ------------
