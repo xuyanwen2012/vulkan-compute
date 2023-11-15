@@ -4,9 +4,9 @@
 #include <iomanip>
 #include <ostream>
 
-namespace brt {
+#include "morton.hpp"
 
-using Code_t = uint32_t;
+namespace brt {
 
 struct InnerNode {
   int32_t delta_node;

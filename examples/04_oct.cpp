@@ -14,7 +14,6 @@ int main(int argc, char **argv) {
   spdlog::info("Current working directory: {}",
                std::filesystem::current_path().string());
 
-  // Computation start here
   core::ComputeEngine engine{};
 
   auto u_mortons = load_pod_data_from_file<uint32_t>("sorted_mortons_1024.bin");
@@ -23,14 +22,11 @@ int main(int argc, char **argv) {
 
   constexpr auto n = 1024;
   constexpr auto num_brt_nodes = n - 1;
-
   assert(u_mortons.size() == n);
   assert(u_brt_nodes.size() == num_brt_nodes);
 
   std::vector<int32_t> cpu_edge_counts(n);
-  std::vector<int32_t> u_oc_offset(n);
-
-  //  std::vector<int> indices(input_size);
+  std::vector<int32_t> cpu_oc_offset(n);
 
   cpu_edge_counts[0] = 1u;
   for (int i = 0; i < num_brt_nodes; ++i) {
@@ -38,13 +34,14 @@ int main(int argc, char **argv) {
         i, cpu_edge_counts.data(), u_brt_nodes.data());
   }
 
-  // std::partial_sum(
-  //     u_edge_counts.begin(), u_edge_counts.end(), u_oc_offset.begin() + 1);
-  // u_oc_offset[0] = 0;
+  std::partial_sum(cpu_edge_counts.begin(),
+                   cpu_edge_counts.end(),
+                   cpu_oc_offset.begin() + 1);
+  cpu_oc_offset[0] = 0;
 
-  // for (int i = 0; i < num_brt_nodes; ++i) {
-  //   std::cout << i << ":\t" << u_oc_offset[i] << std::endl;
-  // }
+  // ---------------------------------------------------------------------------
+  //                          Edge Count
+  // ---------------------------------------------------------------------------
 
   const auto brt_nodes_buf = engine.buffer(n * sizeof(brt::InnerNode));
   const auto edge_count_buf = engine.buffer(n * sizeof(int32_t));
@@ -71,11 +68,7 @@ int main(int argc, char **argv) {
 
   seq->sync();
 
-  // // Show results
-  // for (int i = 0; i < num_brt_nodes; ++i) {
-  //   std::cout << i << ":\t" << edge_count_ptr[i] << std::endl;
-  // }
-
+  // Verify edge count results
   for (int i = 0; i < num_brt_nodes; ++i) {
     if (cpu_edge_counts[i] != edge_count_ptr[i]) {
       spdlog::error("Mismatch at {} : {} vs {}",
@@ -84,6 +77,10 @@ int main(int argc, char **argv) {
                     edge_count_ptr[i]);
     }
   }
+
+  // ---------------------------------------------------------------------------
+  //                          Build Octree
+  // ---------------------------------------------------------------------------
 
   spdlog::info("Done");
   return EXIT_SUCCESS;
