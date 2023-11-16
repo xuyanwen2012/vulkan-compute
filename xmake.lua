@@ -49,25 +49,25 @@ function template()
     add_deps("lib")
     add_packages("vk-bootstrap", "vulkan-memory-allocator", "spirv-cross",
                  "glm", "vulkansdk", "spdlog")
-    if is_plat("linux") then
-        before_build(function(target)
-            os.exec("python3 compile_shaders.py")
-            -- os.exec("./compile_shaders.sh")
-        end)
-    end
+    -- if is_plat("linux") then
+    --     before_build(function(target)
+    --         os.exec("python3 compile_shaders.py")
+    --         -- os.exec("./compile_shaders.sh")
+    --     end)
+    -- end
 
-    after_build(function(target)
-        platform = os.host()
-        arch = os.arch()
-        build_path = ""
-        if is_mode("release") then
-            build_path = "$(buildir)/" .. platform .. "/" .. arch .. "/release/"
-        else
-            build_path = "$(buildir)/" .. platform .. "/" .. arch .. "/debug/"
-        end
-        os.cp("shaders/compiled_shaders/**.spv", build_path)
-        print("Copied compiled shaders to " .. build_path)
-    end)
+    -- after_build(function(target)
+    --     platform = os.host()
+    --     arch = os.arch()
+    --     build_path = ""
+    --     if is_mode("release") then
+    --         build_path = "$(buildir)/" .. platform .. "/" .. arch .. "/release/"
+    --     else
+    --         build_path = "$(buildir)/" .. platform .. "/" .. arch .. "/debug/"
+    --     end
+    --     os.cp("shaders/compiled_shaders/**.spv", build_path)
+    --     print("Copied compiled shaders to " .. build_path)
+    -- end)
 end
 
 target("lib")
@@ -79,19 +79,13 @@ add_files("src/**/*.cpp")
 add_packages("vk-bootstrap", "vulkan-memory-allocator", "spirv-cross", "glm",
              "vulkansdk", "spdlog")
 
-target("app")
-template()
-add_files("examples/main.cpp")
-add_packages("cli11")
+for _, file in ipairs(os.files("examples/*.cpp")) do
+    local name = path.basename(file)
 
-target("brt")
-template()
-add_files("examples/02_brt.cpp")
+    -- remove the number prefix (e.g., 01_XXXX.cpp) before in the name
+    local target_name = name:gsub("%d%d_", "")
 
-target("reduction")
-template()
-add_files("examples/03_reduction.cpp")
-
-target("oct")
-template()
-add_files("examples/04_oct.cpp")
+    target(target_name)
+    template()
+    add_files("examples/" .. name .. ".cpp")
+end

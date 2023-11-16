@@ -2,8 +2,8 @@
 #include <random>
 #include <vector>
 
+#include "baseline/common.hpp"
 #include "baseline/morton.hpp"
-#include "common.hpp"
 #include "core/engine.hpp"
 #include "helpers.hpp"
 

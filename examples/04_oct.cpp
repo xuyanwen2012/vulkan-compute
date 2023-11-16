@@ -5,9 +5,9 @@
 #include <vector>
 
 #include "baseline/brt.hpp"
+#include "baseline/common.hpp"
 #include "baseline/morton.hpp"
 #include "baseline/oct.hpp"
-#include "common.hpp"
 #include "core/engine.hpp"
 #include "helpers.hpp"
 
@@ -34,43 +34,6 @@ int main(int argc, char** argv) {
   constexpr auto num_brt_nodes = n - 1;
   constexpr auto min_coord = 0.0f;
   constexpr auto range = 1024.0f;
-
-  // auto code =
-  //     morton::single_point_to_code(1.0f, 3.0f, 100.0f, min_coord, range);
-  // std::cout << "Code: " << code << "\n";
-
-  // float dec_x, dec_y, dec_z;
-  // morton::single_code_to_point(code, dec_x, dec_y, dec_z, min_coord, range);
-  // std::cout << "Point: " << dec_x << " " << dec_y << " " << dec_z << "\n";
-  // {
-  //   auto code = morton::encode(1, 3, 100);
-  //   std::cout << "Code: " << code << "\n";
-
-  //   uint32_t dec_x, dec_y, dec_z;
-  //   morton::decode(code, dec_x, dec_y, dec_z);
-  //   std::cout << "Point: " << dec_x << " " << dec_y << " " << dec_z << "\n";
-  // }
-
-  // {
-  //   auto code =
-  //       morton::single_point_to_code_v2(1.0f, 3.0f, 100.0f, min_coord,
-  //       range);
-  //   std::cout << "Code: " << code << "\n";
-
-  //   float x = 1.0f;
-  //   float y = 3.0f;
-  //   float z = 100.0f;
-  //   x = (x - min_coord) * 1024.0f / range;
-  //   y = (y - min_coord) * 1024.0f / range;
-  //   z = (z - min_coord) * 1024.0f / range;
-  //   std::cout << "Point(range): " << x << " " << y << " " << z << "\n";
-  //   std::cout << "Point(range, uint): " << (uint32_t)x << " " << (uint32_t)y
-  //             << " " << (uint32_t)z << "\n";
-
-  //   auto p = morton::single_code_to_point_v2(code, min_coord, range);
-  //   std::cout << "Point: " << p[0] << " " << p[1] << " " << p[2] << "\n";
-  //   exit(0);
-  // }
 
   setup_log_level("debug");
   spdlog::info("Current working directory: {}",

@@ -4,7 +4,7 @@
 #include <random>
 #include <vector>
 
-#include "baseline/morton.hpp"
+#include "morton.hpp"
 #include "common.hpp"
 #include "core/engine.hpp"
 #include "helpers.hpp"

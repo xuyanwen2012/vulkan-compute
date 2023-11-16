@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 
-#include "common.hpp"
+#include "baseline/common.hpp"
 #include "core/engine.hpp"
 
 int main(int argc, char **argv) {

@@ -50,16 +50,16 @@ inline void save_pod_data_to_file(
     const std::byte *data,
     const size_t size,
     const std::string_view filename = "data.bin") {
-  std::ofstream outFile(filename.data(), std::ios::binary);
+  std::ofstream out_file(filename.data(), std::ios::binary);
 
-  if (!outFile.is_open()) {
+  if (!out_file.is_open()) {
     throw std::runtime_error("Failed to open file for writing.");
   }
 
   spdlog::info("Saving {} bytes to {}", size, filename);
 
-  outFile.write(reinterpret_cast<const char *>(data), size);
-  outFile.close();
+  out_file.write(reinterpret_cast<const char *>(data), size);
+  out_file.close();
 }
 
 template <typename T>
@@ -75,19 +75,19 @@ template <typename T>
     const std::string_view filename) {
   std::vector<T> loaded_data;
 
-  std::ifstream inFile(filename.data(), std::ios::binary);
-  if (!inFile.is_open()) {
+  std::ifstream in_file(filename.data(), std::ios::binary);
+  if (!in_file.is_open()) {
     throw std::runtime_error("Failed to open file for reading.");
   }
 
-  inFile.seekg(0, std::ios::end);
-  size_t fileSize = inFile.tellg();
-  inFile.seekg(0, std::ios::beg);
+  in_file.seekg(0, std::ios::end);
+  size_t file_size = in_file.tellg();
+  in_file.seekg(0, std::ios::beg);
 
-  loaded_data.resize(fileSize / sizeof(T));
+  loaded_data.resize(file_size / sizeof(T));
 
-  inFile.read(reinterpret_cast<char *>(loaded_data.data()), fileSize);
-  inFile.close();
+  in_file.read(reinterpret_cast<char *>(loaded_data.data()), file_size);
+  in_file.close();
 
   return loaded_data;
 }

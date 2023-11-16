@@ -57,19 +57,6 @@ void Algorithm::destroy() {
   free(push_constants_data_);
 }
 
-// vk::SpecializationInfo Algorithm::make_spec_info() const {
-//   auto info = vk::SpecializationInfo();
-
-//   if (is_clspv_) {
-//     const auto spec_map = clspv_default_spec_const();
-//     const std::array spec_map_content{threads_per_block_, 1u, 1u};
-
-//     info.setMapEntries(spec_map).setData<uint32_t>(spec_map_content);
-//   }
-
-//   return info;
-// }
-
 void Algorithm::set_push_constants(const void *data,
                                    const uint32_t size,
                                    const uint32_t memory_size) {
