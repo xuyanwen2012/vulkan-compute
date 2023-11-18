@@ -104,8 +104,8 @@ class Buffer final : public VulkanResource<vk::Buffer> {
   //      The following functions provides infos for the descriptor set
   // ---------------------------------------------------------------------------
 
-  [[nodiscard]] vk::DescriptorBufferInfo construct_descriptor_buffer_info()
-      const;
+  [[nodiscard, deprecated]] vk::DescriptorBufferInfo
+  construct_descriptor_buffer_info() const;
 
  private:
   // Vulkan Memory Allocator components

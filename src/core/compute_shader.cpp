@@ -5,12 +5,16 @@
 #include <ranges>
 #include <spirv_cross/spirv_glsl.hpp>
 
+#include "core/compute_pipeline.hpp"
 #include "core/shader_loader.hpp"
 
 namespace core {
 ComputeShader::ComputeShader(std::shared_ptr<vk::Device> device_ptr,
+                             const ComputePipeline* compute_pipeline,
                              const std::string_view spirv_filename)
-    : VulkanResource(std::move(device_ptr)), m_spirv_filename_(spirv_filename) {
+    : VulkanResource(std::move(device_ptr)),
+      m_spirv_filename_(spirv_filename),
+      compute_pipeline_(compute_pipeline) {
   const auto spirv_binary = load_shader_from_file(spirv_filename);
 
   const auto create_info = vk::ShaderModuleCreateInfo().setCode(spirv_binary);
@@ -20,6 +24,30 @@ ComputeShader::ComputeShader(std::shared_ptr<vk::Device> device_ptr,
 
   generate_vulkan_descriptor_set_layout();
   generate_push_constant_data();
+}
+
+void ComputeShader::bind(const std::string& resource_name,
+                         const ShaderBufferDesc& buffer_desc) {
+  if (!m_reflection_data_.contains(resource_name)) {
+    throw std::runtime_error("Fail to find shader resource");
+  }
+
+  const vk::DescriptorBufferInfo buffer_info{
+      buffer_desc.buffer->get_handle(),
+      buffer_desc.offset,
+      buffer_desc.range,  // size of buffer
+  };
+
+  const auto bind_data = m_reflection_data_[resource_name];
+  const auto writer =
+      vk::WriteDescriptorSet()
+          .setDescriptorType(bind_data.descriptor_type)  //  eStorageBuffer
+          .setDescriptorCount(bind_data.count)           // 1
+          .setDstBinding(bind_data.binding)
+          .setBufferInfo(buffer_info)
+          .setDstSet(m_descriptor_sets_[bind_data.set]);
+
+  device_ptr_->updateDescriptorSets(1, &writer, 0, nullptr);
 }
 
 void ComputeShader::collect_spirv_meta_data(
@@ -80,8 +108,7 @@ void ComputeShader::collect_spirv_meta_data(
 }
 
 void ComputeShader::generate_vulkan_descriptor_set_layout() {
-  std::vector<vk::DescriptorSetLayoutCreateInfo>
-      descriptor_set_layout_create_infos;
+  // Generate based on which set? what is the binding number
   std::vector<vk::DescriptorSetLayoutBinding> layout_bindings;
   std::map<uint32_t, std::vector<vk::DescriptorSetLayoutBinding>> m_set_groups;
 
@@ -107,11 +134,23 @@ void ComputeShader::generate_vulkan_descriptor_set_layout() {
         descriptor_set_layout_create_info);
 
     m_descriptor_set_layouts_.push_back(set_layout);
-    // m_descriptorSets.push_back(allocater->Allocate(setLayout));
+
+    m_descriptor_sets_.push_back(
+        compute_pipeline_->allocate_descriptor_set(set_layout));
   }
 }
 
-void ComputeShader::generate_push_constant_data() {}
+void ComputeShader::generate_push_constant_data() {
+  if (m_push_constant_meta_.has_value()) {
+    const auto range =
+        vk::PushConstantRange()
+            .setOffset(m_push_constant_meta_->offset)
+            .setSize(m_push_constant_meta_->size)
+            .setStageFlags(m_push_constant_meta_->shader_stage_flag);
+
+    m_push_constant_range_ = std::optional{range};
+  }
+}
 
 std::ostream& operator<<(std::ostream& os,
                          const ComputeShader::BindMetaData& meta_data) {

@@ -29,7 +29,8 @@ namespace fs = std::filesystem;
   // Read the file into a vector
   std::vector<uint32_t> buffer(file_size / sizeof(uint32_t));
   file.seekg(0);
-  file.read(reinterpret_cast<char *>(buffer.data()), file_size);
+  file.read(reinterpret_cast<char *>(buffer.data()),
+            static_cast<std::streamsize>(file_size));
 
   file.close();
 
