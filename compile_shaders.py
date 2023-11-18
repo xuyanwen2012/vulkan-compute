@@ -52,7 +52,7 @@ def compile_with_glslang(gl_shader: str):
         "glslangValidator",
         "-V",
         "--target-env",
-        "spirv1.3",
+        "spirv1.5",
         input_path,
         "-o",
         output_path,

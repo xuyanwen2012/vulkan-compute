@@ -109,7 +109,7 @@ void Algorithm::create_parameters() {
   descriptor_pool_ =
       device_ptr_->createDescriptorPool(descriptor_pool_create_info);
 
-  // Descriptor set
+  // Descriptor set layout
   std::vector<vk::DescriptorSetLayoutBinding> bindings;
   bindings.reserve(usm_buffers_.size());
   for (auto i = 0u; i < usm_buffers_.size(); ++i) {

@@ -9,7 +9,7 @@
 namespace fs = std::filesystem;
 
 [[nodiscard]] inline std::vector<uint32_t> load_shader_from_file(
-    const std::string &filename) {
+    const std::string_view filename) {
   const fs::path shader_path = fs::current_path() / filename;
   spdlog::info("loading shader path: {}", shader_path.string());
 
@@ -18,7 +18,7 @@ namespace fs = std::filesystem;
   }
 
   // Open the shader file
-  std::ifstream file(filename, std::ios::ate | std::ios::binary);
+  std::ifstream file(filename.data(), std::ios::ate | std::ios::binary);
 
   if (!file.is_open()) {
     throw std::runtime_error("Failed to open file: " + shader_path.string());

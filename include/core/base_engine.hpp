@@ -45,9 +45,11 @@ class BaseEngine {
    *
    * @return std::shared_ptr<vk::Device> A shared pointer to the vk::Device.
    */
-  [[nodiscard]] auto get_device_ptr() {
+  [[nodiscard]] auto get_device_shared_ptr() {
     return std::make_shared<vk::Device>(device_.device);
   }
+
+  [[nodiscard]] vk::Device get_device_ptr() { return device_.device; }
 
   [[nodiscard, maybe_unused]] vk::Queue &get_queue() { return queue_; }
   [[nodiscard, maybe_unused]] const vk::Queue &get_queue() const {

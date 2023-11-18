@@ -39,7 +39,7 @@ class ComputeEngine : public BaseEngine {
    * @return std::shared_ptr<Buffer>
    */
   [[nodiscard]] std::shared_ptr<Buffer> buffer(vk::DeviceSize size) {
-    auto buf = std::make_shared<Buffer>(get_device_ptr(), size);
+    auto buf = std::make_shared<Buffer>(get_device_shared_ptr(), size);
     if (manage_resources_) {
       buffers_.push_back(buf);
     }
@@ -47,7 +47,8 @@ class ComputeEngine : public BaseEngine {
   }
 
   [[nodiscard]] std::shared_ptr<Sequence> sequence() {
-    auto seq = std::make_shared<Sequence>(get_device_ptr(), device_, queue_);
+    auto seq =
+        std::make_shared<Sequence>(get_device_shared_ptr(), device_, queue_);
     if (manage_resources_) {
       sequence_.push_back(seq);
     }
@@ -70,7 +71,7 @@ class ComputeEngine : public BaseEngine {
   [[nodiscard]] auto algorithm(Args &&...args) -> std::shared_ptr<Algorithm>
     requires EngineComponentArgsMatch<Algorithm, Args...>
   {
-    auto algo = std::make_shared<Algorithm>(get_device_ptr(),
+    auto algo = std::make_shared<Algorithm>(get_device_shared_ptr(),
                                             std::forward<Args>(args)...);
     if (manage_resources_) {
       algorithms_.push_back(algo);
