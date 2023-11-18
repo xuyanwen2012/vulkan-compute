@@ -10,3 +10,6 @@ vsxmake2022/
 
 # Generated Visual Studio Code Workspace
 .vscode/
+
+# Jetbrain
+.idea/

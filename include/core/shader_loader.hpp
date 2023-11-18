@@ -13,7 +13,7 @@ namespace fs = std::filesystem;
   const fs::path shader_path = fs::current_path() / filename;
   spdlog::info("loading shader path: {}", shader_path.string());
 
-  if (!fs::exists(shader_path)) {
+  if (!exists(shader_path)) {
     throw std::runtime_error("Shader file not found: " + shader_path.string());
   }
 

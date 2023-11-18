@@ -23,7 +23,8 @@ namespace core {
  */
 class ComputeEngine : public BaseEngine {
  public:
-  ComputeEngine() : vkh_device_(device_.device) {}
+  explicit ComputeEngine(const bool manage_resources = true)
+      : vkh_device_(device_.device), manage_resources_(manage_resources) {}
 
   ~ComputeEngine() {
     spdlog::debug("ComputeEngine::~ComputeEngine");
